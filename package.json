@@ -1,0 +1,24 @@
+{
+  "name": "bobaos",
+  "version": "1.2.0",
+  "description": "",
+  "main": "app/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel *.js -d dist && babel config -d dist/config && babel app -d dist/app && babel lib -d dist/lib && cp -R config dist/",
+    "start": "nodejs ./dist/app/myClient.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dateformat": "^2.0.0",
+    "fetch": "^1.1.0",
+    "serialport": "^4.0.7",
+    "socket.io": "^2.0.3",
+    "winston": "^3.0.0-rc1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.5.2"
+  }
+}

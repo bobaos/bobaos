@@ -1,0 +1,8 @@
+[
+  {
+    "name": "Temperature",
+    "id": 1,
+    "type": "dpt9",
+    "read": true
+  }
+]
