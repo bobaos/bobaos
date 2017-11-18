@@ -6,13 +6,37 @@ import logger from '../lib/logger';
 import * as scripts from '../scripts';
 
 
+// logging funcs
+const info = (...args) => {
+  let message = {
+    source: "app/app.js",
+    data: args
+  };
+  logger.info(JSON.stringify(message))
+};
+const debug = (...args) => {
+  let message = {
+    source: "app/app.js",
+    data: args
+  };
+  logger.debug(JSON.stringify(message))
+};
+const error = (...args) => {
+  let message = {
+    source: "app/app.js",
+    data: args
+  };
+  logger.error(JSON.stringify(message))
+};
+
+
 let app = new Baos({
   serialPortConfig: serialPortConfig
 });
 
 app.importDatapoints(datapoints);
 
-app.on('reset', () => logger.info('reset'));
+app.on('reset', () => info('reset'));
 
 app.on('open', function () {
   const readAllDatapoints = () => {
@@ -58,13 +82,13 @@ app.on('open', function () {
 
 // now listener that writes to store
   app.on('value', (payload) => {
-    logger.info('myClient', payload);
+    info('myClient', payload);
     let service = payload.service;
     if (service === 'DatapointValue.Ind' || service === 'GetDatapointValue.Res') {
       let datapoint = payload.datapoint;
       let name = datapoint.name;
       let value = payload.value;
-      logger.info('store set', name, value);
+      info('store set', name, value);
       app.store.set(name, value);
     }
   });
@@ -72,9 +96,31 @@ app.on('open', function () {
 
 
 // load custom scripts
-Object.keys(scripts).forEach((plugin) => {
-  console.dir(plugin);
-  if (scripts[plugin].hasOwnProperty("start")) {
-    scripts[plugin].start(app);
+Object.keys(scripts).forEach((script) => {
+  if (scripts[script].hasOwnProperty("start")) {
+    let scriptLogger = {
+      info: (...args) => {
+        let message = {
+          source: script,
+          data: JSON.stringify(args)
+        };
+        logger.info(message);
+      },
+      error: (...args) => {
+        let message = {
+          source: script,
+          data: JSON.stringify(args)
+        };
+        logger.error(message);
+      },
+      debug: (...args) => {
+        let message = {
+          source: script,
+          data: JSON.stringify(args)
+        };
+        logger.info(message);
+      }
+    };
+    scripts[script].start(app, scriptLogger);
   }
 });

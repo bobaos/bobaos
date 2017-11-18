@@ -2,10 +2,10 @@ const port = 49199;
 
 const io = require('socket.io')(port);
 
-export function start(app) {
-  console.log("starting socketio custom script");
+// (app, logger)
+export function start(app, logger) {
+  logger.info("starting");
   io.on('connection', (socket) => {
-    // socket.monitor('timeConnected', Date.now());
     socket.on('baos.value.set.req', data => {
       if (data) {
         //logger.info('socket value.set.req:', data);

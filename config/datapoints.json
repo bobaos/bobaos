@@ -4,5 +4,41 @@
     "id": 1,
     "type": "dpt9",
     "read": true
+  },
+  {
+    "name": "White.Write",
+    "id": 2,
+    "type": "dpt5",
+    "read": false
+  },
+  {
+    "name": "Red.Write",
+    "id": 3,
+    "type": "dpt5",
+    "read": false
+  },
+  {
+    "name": "Green.Write",
+    "id": 4,
+    "type": "dpt5",
+    "read": false
+  },
+  {
+    "name": "Blue.Write",
+    "id": 5,
+    "type": "dpt5",
+    "read": false
+  },
+  {
+    "name": "O1.Read.Write",
+    "id": 6,
+    "type": "dpt1",
+    "read": true
+  },
+  {
+    "name": "O2.Read.Write",
+    "id": 7,
+    "type": "dpt1",
+    "read": true
   }
 ]
