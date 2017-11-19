@@ -64,7 +64,13 @@ For production it's better not to use babel-node, instead transpile it to differ
 
 For custom script example take a look to [scripts/socket.io/index.js](https://github.com/shabunin/bobaos/blob/master/scripts/socketio/index.js)
 
+# Demo
+[My presentation on TADHack 2017](https://www.youtube.com/watch?v=vBXVysVJymc)
+
 # TODO:
-1. npm script to transpile ES2015
-2. ...
-3. PROFIT.
+Of course, there is a lot things to do and I will keep improving this project in time
+1. Plugin for [homebridge](https://github.com/nfarina/homebridge) let use Raspberry Pi with BAOS 838 kBerry as Apple HomeKit bridge to integrate with Home app and Siri. 
+2. Firebase integration. First useful case is logging, so you'll be able to debug your installation remotely.
+3. npm package
+4. ...
+5. PROFIT!!
