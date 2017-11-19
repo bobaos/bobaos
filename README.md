@@ -65,7 +65,7 @@ For production it's better not to use babel-node, instead transpile it to differ
 For custom script example take a look to [scripts/socket.io/index.js](https://github.com/shabunin/bobaos/blob/master/scripts/socketio/index.js)
 
 # Demo
-[My presentation on TADHack 2017](https://www.youtube.com/watch?v=vBXVysVJymc)
+[My presentation at TADHack 2017](https://www.youtube.com/watch?v=vBXVysVJymc)
 
 # TODO:
 Of course, there is a lot things to do and I will keep improving this project in time
