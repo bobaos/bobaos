@@ -27,7 +27,7 @@ It will install all npm dependencies as [serialport](https://github.com/node-ser
 
 4. Configuration
 
-* Take a look at ./config/serialPort.json. If you are using Raspbian you, probably, won't need to change it.
+* Take a look at ./config/serialPort.json. If using Raspbian, you, probably, won't need to change it.
 * Configure ./config/datapoints.json according to your ETS project.
 
 ```json
