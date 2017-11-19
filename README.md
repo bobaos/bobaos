@@ -34,9 +34,9 @@ It will install all npm dependencies as [serialport](https://github.com/node-ser
 [
   {
     "name": "Temperature",
-    "id": 1, // datapoint id, from ETS project
-    "type": "dpt9", // datapoint type
-    "read": true // read flag, used on startup to read datapoint values
+    "id": 1, 
+    "type": "dpt9", 
+    "read": true
   },
   {
       "name": "White.Write",
@@ -47,7 +47,11 @@ It will install all npm dependencies as [serialport](https://github.com/node-ser
 ]
 ```
 
-Currently, only DPT1 (1bit), DPT5 (1byte int), DPT9 (2bytes float) are supported.
+"id": datapoint id from ETS project.
+
+"type": datapoint type. Currently, only DPT1 (1bit), DPT5 (1byte int), DPT9 (2bytes float) are supported.
+
+"read": read flag, used on startup to read datapoint values
 
 # Running
 
