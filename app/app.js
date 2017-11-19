@@ -12,21 +12,21 @@ const info = (...args) => {
     source: "app/app.js",
     data: args
   };
-  logger.info(JSON.stringify(message))
+  logger.info(message)
 };
 const debug = (...args) => {
   let message = {
     source: "app/app.js",
     data: args
   };
-  logger.debug(JSON.stringify(message))
+  logger.debug(message)
 };
 const error = (...args) => {
   let message = {
     source: "app/app.js",
     data: args
   };
-  logger.error(JSON.stringify(message))
+  logger.error(message)
 };
 
 
@@ -98,25 +98,26 @@ app.on('open', function () {
 // load custom scripts
 Object.keys(scripts).forEach((script) => {
   if (scripts[script].hasOwnProperty("start")) {
+    let sourcePath = `scripts/${script}`;
     let scriptLogger = {
       info: (...args) => {
         let message = {
-          source: script,
-          data: JSON.stringify(args)
+          source: sourcePath,
+          data: args
         };
         logger.info(message);
       },
       error: (...args) => {
         let message = {
-          source: script,
-          data: JSON.stringify(args)
+          source: sourcePath,
+          data: args
         };
         logger.error(message);
       },
       debug: (...args) => {
         let message = {
-          source: script,
-          data: JSON.stringify(args)
+          source: sourcePath,
+          data: args
         };
         logger.info(message);
       }
