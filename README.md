@@ -1,5 +1,4 @@
 # bobaos project
----
 
 Hello, friend.
 
