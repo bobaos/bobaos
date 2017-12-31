@@ -57,6 +57,7 @@ We send requests at first
 ```
 
 And listen to responses
+
 ```js
   // listen to incoming events and responses
   app.on('service', console.log);
@@ -96,88 +97,92 @@ Currently, this module supports following methods:
 
 **getDatapointDescription(id, [number = 1])**.
 
-    Get description for datapoints. Response includes value type(length), config flags, datapoint type.
+Get description for datapoints. Response includes value type(length), config flags, datapoint type.
 
-    Response example:
+Response example:
     
-    ```
-    { service: 'GetDatapointDescription.Res',
-      direction: 'response',
-      error: false,
-      start: 1,
-      number: 10,
-      payload: 
-        [ { id: 1, valueType: 8, configFlags: 95, dpt: 'dpt9' },
-        { id: 2, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-        { id: 3, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-        { id: 4, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-        { id: 5, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-        { id: 6, valueType: 0, configFlags: 95, dpt: 'dpt1' },
-        { id: 7, valueType: 0, configFlags: 95, dpt: 'dpt1' },
-        { id: 8, valueType: 0, configFlags: 87, dpt: 'dpt1' },
-        { id: 9, valueType: 0, configFlags: 87, dpt: 'dpt1' },
-        { id: 10, valueType: 7, configFlags: 83, dpt: 'dpt5' } ] }
-    ```
+```
+{ service: 'GetDatapointDescription.Res',
+  direction: 'response',
+  error: false,
+  start: 1,
+  number: 10,
+  payload: 
+    [ { id: 1, valueType: 8, configFlags: 95, dpt: 'dpt9' },
+    { id: 2, valueType: 7, configFlags: 87, dpt: 'dpt5' },
+    { id: 3, valueType: 7, configFlags: 87, dpt: 'dpt5' },
+    { id: 4, valueType: 7, configFlags: 87, dpt: 'dpt5' },
+    { id: 5, valueType: 7, configFlags: 87, dpt: 'dpt5' },
+    { id: 6, valueType: 0, configFlags: 95, dpt: 'dpt1' },
+    { id: 7, valueType: 0, configFlags: 95, dpt: 'dpt1' },
+    { id: 8, valueType: 0, configFlags: 87, dpt: 'dpt1' },
+    { id: 9, valueType: 0, configFlags: 87, dpt: 'dpt1' },
+    { id: 10, valueType: 7, configFlags: 83, dpt: 'dpt5' } ] }
+```
+
 **setDatapointValue(id, value)**
   
-    Set and send datapoint value to bus. Value should be Buffer encoded.
+Set and send datapoint value to bus. Value should be Buffer encoded.
     
-    Response example:
+Response example:
     
-    ```
-    { service: 'SetDatapointValue.Res',
-      direction: 'response',
-      error: false,
-      start: 2,
-      number: 0,
-      payload: null }
-    ```
+```
+{ service: 'SetDatapointValue.Res',
+  direction: 'response',
+  error: false,
+  start: 2,
+  number: 0,
+  payload: null }
+```
+
 **readDatapointFromBus(id, length)**
-    Send read request to KNX bus. 
+
+Send read request to KNX bus. 
     
-    Response example:
-    ```
-    { service: 'SetDatapointValue.Res',
-      direction: 'response',
-      error: false,
-      start: 1,
-      number: 0,
-      payload: null }
-    ```
+Response example:
+
+```
+{ service: 'SetDatapointValue.Res',
+  direction: 'response',
+  error: false,
+  start: 1,
+  number: 0,
+  payload: null }
+```
     
 **getDatapointValue(id, [number = 1])**
     
-    Get datapoints value from baos.
+Get datapoints value from baos.
     
-    Response example:
+Response example:
     
-    ```
-    { service: 'GetDatapointValue.Res',
-      direction: 'response',
-      error: false,
-      start: 1,
-      number: 10,
-      payload: 
-       [ { id: 1, state: 4, length: 2, value: <Buffer 0c fb> },
-         { id: 2, state: 16, length: 1, value: <Buffer c0> },
-         { id: 3, state: 16, length: 1, value: <Buffer 10> },
-         { id: 4, state: 0, length: 1, value: <Buffer 00> } ] }
-    ```
+```
+{ service: 'GetDatapointValue.Res',
+  direction: 'response',
+  error: false,
+  start: 1,
+  number: 10,
+  payload: 
+   [ { id: 1, state: 4, length: 2, value: <Buffer 0c fb> },
+     { id: 2, state: 16, length: 1, value: <Buffer c0> },
+     { id: 3, state: 16, length: 1, value: <Buffer 10> },
+     { id: 4, state: 0, length: 1, value: <Buffer 00> } ] }
+```
 
 **getParameterByte(id, [number = 1])**
 
-    Get parameter bytes starting with id number.
+Get parameter bytes starting with id number.
     
-    Response example:
+Response example:
     
-    ```
-    { service: 'GetParameterByte.Res',
-      direction: 'response',
-      error: false,
-      start: 1,
-      number: 10,
-      payload: <Buffer 01 03 05 07 09 0b 0a 00 00 00> }
-    ```
+```
+{ service: 'GetParameterByte.Res',
+  direction: 'response',
+  error: false,
+  start: 1,
+  number: 10,
+  payload: <Buffer 01 03 05 07 09 0b 0a 00 00 00> }
+```
 
 # Useful cases
 
