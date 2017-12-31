@@ -36,7 +36,7 @@ It will install all npm dependencies as [serialport](https://github.com/node-ser
 # Running example
 
 ```sh
-npx babel-node example/example.js 
+node example/example.js 
 ```
 
 In my case I have one temperature sensor(id 1, dpt9), LED brightness(id 2, dpt5).
