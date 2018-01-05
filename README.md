@@ -8,41 +8,36 @@ The main purpose of project is to bring modern JavaScript with it's infrastructu
 
 # Installation
 
-1. Prepare your Raspberry Pi: install raspbian, enable ssh. Or you could download my image [here](https://drive.google.com/file/d/14nKNbaQfCUN9Mu7cFc5JTicbgbWo06kt/view?usp=sharing). In this case you should go directly to step 4. Image is based on 2017-11-29-raspbian-stretch-lite with installed nodejs 8, vim, git, enabled ssh and correct config.txt, cmdline.txt.
+1. Prepare your Raspberry Pi: install raspbian, enable ssh. Or you could download my image [here](https://drive.google.com/file/d/14nKNbaQfCUN9Mu7cFc5JTicbgbWo06kt/view?usp=sharing). In this case you should go directly to step 5. Image is based on 2017-11-29-raspbian-stretch-lite with installed nodejs 8, vim, git, enabled ssh and correct config.txt, cmdline.txt.
  
-  * Install [KNX BAOS Module 838 kBerry](https://www.weinzierl.de/index.php/en/all-knx/knx-module-en/knx-baos-module-838-en) shield.
+2. Install [KNX BAOS Module 838 kBerry](https://www.weinzierl.de/index.php/en/all-knx/knx-module-en/knx-baos-module-838-en) shield.
 
-2. [Set up serial port](https://github.com/weinzierl-engineering/baos/blob/master/docs/Raspbian.adoc#kberry)
+3. [Set up serial port](https://github.com/weinzierl-engineering/baos/blob/master/docs/Raspbian.adoc#kberry)
   
-3. Install nodejs, git
+4. Install nodejs, git
 ```sh
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs git
 ```
-4. Clone this repository
+
+5. Test with [bobaos-cli](https://github.com/shabunin/bobaos-cli)
 
 ```sh
-git clone https://github.com/shabunin/bobaos.git
+sudo npm install -g bobaos-cli
+bobaos-cli
 ```
-4. Install dependencies
 
+# Using with your application
+
+Add this module to your nodejs application:
 ```sh
-cd bobaos/
-npm install
+npm install --save bobaos
 ```
 
-It will install all npm dependencies as [serialport](https://github.com/node-serialport/node-serialport).
-
-# Running example
-
-```sh
-node example/example.js 
-```
-
-In my case I have one temperature sensor(id 1, dpt9), LED brightness(id 2, dpt5).
-
-We send requests at first
+Define in js file:
 ```js
+  const Baos = require('bobaos');
+  const app = new Baos({serialPort: {device: '/dev/ttyAMA0'}, debug: false});
   // send requests after successful initial reset
   app.on('open', () => {
     app
@@ -54,11 +49,7 @@ We send requests at first
       .setDatapointValue(2, Buffer.alloc(1, 0xc0))
       .getDatapointValue(2);
   });
-```
 
-And listen to responses
-
-```js
   // listen to incoming events and responses
   app.on('service', console.log);
 ``` 
@@ -84,7 +75,7 @@ The output should looks like this with disabled debug option
   ....
 ```
 
-For more details look at example/out_debug_*.log
+For more details look at example/ folder.
 
 The values in request/response are buffers and you should use some library to decode/encode values. I suggest [knx-dpts-baos](https://github.com/shabunin/knx-dpts-baos).
 
