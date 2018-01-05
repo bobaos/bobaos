@@ -1,4 +1,4 @@
-const Baos = require('../index');
+const Baos = require('../');
 
 const app = new Baos({debug: false});
 

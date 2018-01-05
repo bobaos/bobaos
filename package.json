@@ -1,14 +1,19 @@
 {
   "name": "bobaos",
-  "version": "1.0.0",
-  "description": "Pure js module for wienzierl 838 kBerry module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "serialport": "^6.0.4"
-  }
+    "version": "1.0.0",
+    "description": "Pure js module for wienzierl 838 kBerry module",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/shabunin/bobaos.git"
+    },
+    "keywords": ["knx", "baos"],
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Vladimir Shabunin",
+    "license": "ISC",
+    "dependencies": {
+      "serialport": "^6.0.4"
+    }
 }

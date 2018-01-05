@@ -198,5 +198,5 @@ Response example:
 [Apple HomeKit integration](https://www.youtube.com/watch?v=6K-xG2r9YwI)
 
 # TODO:
-1. npm package
+1. **DONE** npm package:
 2. More services support
