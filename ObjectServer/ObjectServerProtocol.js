@@ -431,17 +431,44 @@ class ObjectServerProtocol {
       }
     }
   }
+  static _processServerItemData(data) {
+    let payload = [];
+    let i = 0;
+    while (i < data.length - 3) {
+      let id = data.readUInt16BE(i);
+      i += 2;
+      let length = data.readUInt8(i);
+      i += 1;
+
+      let value = null;
+      // check for length
+      if (data.length >= i + length) {
+        value = data.slice(i, i + length);
+        i += length;
+      }
+      payload.push({
+        id: id,
+        length: length,
+        value: value
+      });
+    }
+    return payload;
+  }
   static _ServerItemInd(data) {
     // TODO: implement ServerItem requests/responses/indications
     const serviceName = 'ServerItem.Ind';
-    let service = this._findServiceByName(serviceName);
+    const service = this._findServiceByName(serviceName);
+    const start = data.readUInt16BE(0);
+    const number = data.readUInt16BE(2);
+    const payloadPart = data.slice(4);
+    const payload = this._processServerItemData(payloadPart);
     return {
       service: serviceName,
       direction: service.direction,
       error: false,
       start: 0,
       number: 0,
-      payload: null
+      payload: payload
     }
   }
 
