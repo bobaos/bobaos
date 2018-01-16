@@ -68,6 +68,7 @@ class ObjectServerProtocol {
       throw new TypeError('Please specify parameters as object {start: Int, number: Int}');
     }
   }
+
   static GetDatapointDescriptionReq(params) {
     if (params !== null && typeof params === 'object') {
       if (!Object.prototype.hasOwnProperty.call(params, 'start')) {
@@ -382,16 +383,67 @@ class ObjectServerProtocol {
         return "unknown";
       }
     };
+    const findValueType = (code) => {
+      const valueTypes = [
+        {code: 0, length: 1},
+        {code: 1, length: 1},
+        {code: 2, length: 1},
+        {code: 3, length: 1},
+        {code: 4, length: 1},
+        {code: 5, length: 1},
+        {code: 6, length: 1},
+        {code: 7, length: 1},
+        {code: 8, length: 2},
+        {code: 9, length: 3},
+        {code: 10, length: 4},
+        {code: 11, length: 6},
+        {code: 12, length: 8},
+        {code: 13, length: 10},
+        {code: 14, length: 14},
+      ];
+      const findByCode = t => t.code === code;
+      let valueType = valueTypes.find(findByCode);
+      if (valueType !== null && typeof valueType === 'object') {
+        return valueType.length;
+      } else {
+        return "unknown";
+      }
+    };
+    const processConfigFlags = (code) => {
+      const transmitPriorityTable = [
+        {code: 0, value: "system"},
+        {code: 1, value: "high"},
+        {code: 2, value: "alarm"},
+        {code: 3, value: "low"}
+      ];
+      const transmitPriorityCode = code & 0x03;
+      const transmitPriorityValue = transmitPriorityTable.find(t => t.code === transmitPriorityCode).value;
+      const datapointCommunication = !!(code & 0x04);
+      const read = !!(code & 0x08);
+      const write = !!(code & 0x10);
+      const readOnInit = !!(code & 0x20);
+      const transmitToBus = !!(code & 0x40);
+      const updateOnResponse = !!(code & 0x80);
+      return {
+        priority: transmitPriorityValue,
+        communication: datapointCommunication,
+        read: read,
+        write: write,
+        readOnInit: readOnInit,
+        transmit: transmitToBus,
+        update: updateOnResponse
+      };
+    };
     while (i < data.length - 4) {
       let id = data.readUInt16BE(i);
-      let valueType = data.readUInt8(i + 2);
-      let configFlags = data.readUInt8(i + 3);
+      let valueTypeByte = data.readUInt8(i + 2);
+      let configFlagsByte = data.readUInt8(i + 3);
       let dptCode = data.readUInt8(i + 4);
       i += 5;
       payload.push({
         id: id,
-        valueType: valueType,
-        configFlags: configFlags,
+        length: findValueType(valueTypeByte),
+        flags: processConfigFlags(configFlagsByte),
         dpt: findDptType(dptCode)
       })
     }
@@ -405,7 +457,7 @@ class ObjectServerProtocol {
       throw new RangeError(`${serviceName}: data length expeted to be > 5 but got ${data.length}`);
     }
     let start = data.readUInt16BE(0);
-    let  number = data.readUInt16BE(2);
+    let number = data.readUInt16BE(2);
     if (number !== 0) {
       // TODO: process
       let payloadPart = data.slice(4);
@@ -431,6 +483,7 @@ class ObjectServerProtocol {
       }
     }
   }
+
   static _processServerItemData(data) {
     let payload = [];
     let i = 0;
@@ -454,6 +507,7 @@ class ObjectServerProtocol {
     }
     return payload;
   }
+
   static _ServerItemInd(data) {
     // TODO: implement ServerItem requests/responses/indications
     const serviceName = 'ServerItem.Ind';
@@ -502,7 +556,7 @@ class ObjectServerProtocol {
                 break;
             }
           } catch (e) {
-            console.log(`Catch error while processing service ${service.name} data: `, dataPart);
+            console.log(`Catch error while processing service ${service.name} data: `, dataPart, 'error:', e);
           }
         } else {
           throw new RangeError(`Cannot find service with main=${main} and sub=${sub}`);
@@ -524,6 +578,7 @@ class ObjectServerProtocol {
       throw new RangeError(`_findErrorByCode: couldn't find error by code: ${errorCode}`);
     }
   }
+
   static _findServiceByName(serviceName) {
     const findByName = t => t.name === serviceName;
     const service = Services.find(findByName);
