@@ -203,6 +203,25 @@ class ObjectServerProtocol {
   }
 
   static _processDatapointValuePayload(data) {
+    const processStateByte = (code) => {
+      const transmissionStatusList = [
+        {code: 0, status: "Idle/OK"},
+        {code: 1, status: "Idle/Error"},
+        {code: 2, status: "Transmission in progress"},
+        {code: 3, status: "Transmission request"}
+      ];
+      const transmissionStatusCode = code & 0x03;
+      const transmissionStatus = transmissionStatusList.find(t => t.code === transmissionStatusCode).status;
+      const readRequestFlag = !!(code & 0x04);
+      const updateFlag = !!(code & 0x08);
+      const validFlag = !!(code & 0x10);
+      return {
+        transmissionStatus: transmissionStatus,
+        readRequestFlag: readRequestFlag,
+        updateFlag: updateFlag,
+        validFlag: validFlag
+      }
+    };
     let payload = [];
     let i = 0;
     while (i < data.length - 4) {
@@ -222,7 +241,7 @@ class ObjectServerProtocol {
       }
       payload.push({
         id: id,
-        state: state,
+        state: processStateByte(state),
         length: length,
         value: value
       });

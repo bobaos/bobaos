@@ -9,8 +9,8 @@ app.on('open', function () {
     // .readDatapointFromBus(1, 1) // error
     // .readDatapointFromBus(1, 2)
     // .getDatapointValue(1, 10)
-    // .setDatapointValue(2, Buffer.alloc(1, 0xc0))
-    // .getDatapointValue(2);
+    // .setDatapointValue(2, Buffer.alloc(2, 0xc0))
+    .getDatapointValue(1);
 });
 
 app.on('reset', function () {
@@ -26,5 +26,5 @@ app.on('reset', function () {
 
 
 app.on('service', (data) => {
-  console.log(data.payload)
+  console.log(data.service, data.payload)
 });
