@@ -72,8 +72,21 @@ class Baos extends EventEmitter {
           this.log(`baos constructor: sending reset request[${resetIntervalCount + 1}]`);
           this._ft12_sendResetRequest();
         }
+        if (!resetAckReceived && resetIntervalCount >= resetIntervalMaxCount) {
+          this.log("closing serial port");
+          this._serialPort.close((err) => {
+            if (err) {
+              throw new Errir("error while closing port: " + err);
+            }
+            this._ft12_vars.resetIntervalCount = 0;
+            clearInterval(this._ft12_vars.resetIntervalID);
+            this.log("opening serialport");
+            this._serialPort.open();
+          })
+        }
       }, this._ft12_consts.resetIntervalTime);
-    });
+    })
+    ;
   }
 
   // FT12 process data
@@ -237,19 +250,20 @@ class Baos extends EventEmitter {
     }
     return this;
   }
+
   setDatapointValue(id, value) {
     if (typeof id === "undefined") {
       throw new Error("Please specify datapoint id");
     }
     if (!Buffer.isBuffer(value)) {
-        throw new TypeError("Please specify value as buffer");
+      throw new TypeError("Please specify value as buffer");
     }
     try {
       const data = ObjectServerProtocol.SetDatapointValueReq({
         start: id,
         number: 1,
         payload: [
-            {id: id, value: value, command: 'set and send'}
+          {id: id, value: value, command: 'set and send'}
         ]
       });
       this._queueAdd(data);
@@ -258,6 +272,7 @@ class Baos extends EventEmitter {
     }
     return this;
   }
+
   readDatapointFromBus(id, length) {
     if (typeof id === "undefined") {
       throw new Error("Please specify datapoint id");
@@ -280,6 +295,7 @@ class Baos extends EventEmitter {
     }
     return this;
   }
+
   getDatapointValue(id, number = 1) {
     if (typeof id === "undefined") {
       throw new Error("Please specify datapoint id");
@@ -296,6 +312,7 @@ class Baos extends EventEmitter {
     return this;
 
   }
+
   getParameterByte(id, number = 1) {
     if (typeof id === "undefined") {
       throw new Error("Please specify datapoint id");
@@ -311,10 +328,22 @@ class Baos extends EventEmitter {
     }
     return this;
   }
+
   // log
-  log(...args) {
-    if (this.debug) {
-      console.log('Baos:', args);
+  log(...
+        args) {
+    if (
+
+      this
+        .debug
+    ) {
+      console
+        .log(
+          'Baos:'
+          ,
+          args
+        )
+      ;
     }
   }
 }
