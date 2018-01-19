@@ -135,7 +135,7 @@ class Baos extends EventEmitter {
       throw new RangeError(`_ft12_processDataFrame: expected length > ${FIXED_FRAME_LENGTH} but got ${data.length}`);
     }
     // send acknowledge to Baos in any case
-    setTimeout( _ => {this._ft12_sendAck();}, 10);
+    this._ft12_sendAck();
     // this.emit('_ft12.dataFrame', message);
     // DONE: parse
     try {
@@ -181,9 +181,7 @@ class Baos extends EventEmitter {
       this._ft12_vars.lastRequest = frame.slice();
       this._ft12_vars.ackReceived = false;
       this._ft12_vars.responseReceived = false;
-      setTimeout(_ => {
-        this._serialPort.write(frame);
-      }, 20);
+      this._serialPort.write(frame);
     } catch (e) {
       this.log(e);
     }
