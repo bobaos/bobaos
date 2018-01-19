@@ -99,16 +99,9 @@ Response example:
   start: 1,
   number: 10,
   payload: 
-    [ { id: 1, valueType: 8, configFlags: 95, dpt: 'dpt9' },
-    { id: 2, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-    { id: 3, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-    { id: 4, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-    { id: 5, valueType: 7, configFlags: 87, dpt: 'dpt5' },
-    { id: 6, valueType: 0, configFlags: 95, dpt: 'dpt1' },
-    { id: 7, valueType: 0, configFlags: 95, dpt: 'dpt1' },
-    { id: 8, valueType: 0, configFlags: 87, dpt: 'dpt1' },
-    { id: 9, valueType: 0, configFlags: 87, dpt: 'dpt1' },
-    { id: 10, valueType: 7, configFlags: 83, dpt: 'dpt5' } ] }
+    [ { id: 1, length: 2, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true }, dpt: 'dpt9' },
+    { id: 2, length: 1, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true}, dpt: 'dpt5' },
+    { id: 3, length: 1, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true}, dpt: 'dpt5' },
 ```
 
 **setDatapointValue(id, value)**
@@ -154,10 +147,10 @@ Response example:
   start: 1,
   number: 10,
   payload: 
-   [ { id: 1, state: 4, length: 2, value: <Buffer 0c fb> },
-     { id: 2, state: 16, length: 1, value: <Buffer c0> },
-     { id: 3, state: 16, length: 1, value: <Buffer 10> },
-     { id: 4, state: 0, length: 1, value: <Buffer 00> } ] }
+   [ { id: 1, state: { transmissionStatus: "Idle/OK", readRequestFlag: false, updateFlag: false, validFlag: false }, length: 2, value: <Buffer 0c fb> },
+     { id: 2, state: { transmissionStatus: "Idle/OK", readRequestFlag: false, updateFlag: false, validFlag: false }, length: 1, value: <Buffer c0> },
+     { id: 3, state: { transmissionStatus: "Idle/OK", readRequestFlag: false, updateFlag: false, validFlag: false }, length: 1, value: <Buffer 10> },
+     { id: 4, state: { transmissionStatus: "Idle/OK", readRequestFlag: false, updateFlag: false, validFlag: false }, length: 1, value: <Buffer 00> } ] }
 ```
 
 **getParameterByte(id, [number = 1])**
