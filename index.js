@@ -167,6 +167,7 @@ class Baos extends EventEmitter {
           this._ft12_vars.lastResponse = service;
           this._switchFrameCount();
           // TODO: queue next
+          this._queue.data.shift();
           this._queueNext();
           break;
         default:
@@ -206,7 +207,7 @@ class Baos extends EventEmitter {
     this.log('_queue_next', this._queue.length);
     if (this._queue.length > 0) {
       if (this._ft12_vars.ackReceived && this._ft12_vars.responseReceived) {
-        let data = this._queue.shift();
+        let data = this._queue[0];
         this.log('_queue_next send data', data);
         this._ft12_sendDataFrame(data);
       } else {
