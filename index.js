@@ -76,7 +76,7 @@ class Baos extends EventEmitter {
           this.log("closing serial port");
           this._serialPort.close((err) => {
             if (err) {
-              throw new Errir("error while closing port: " + err);
+              throw new Error("error while closing port: " + err);
             }
             this._ft12_vars.resetIntervalCount = 0;
             clearInterval(this._ft12_vars.resetIntervalID);
