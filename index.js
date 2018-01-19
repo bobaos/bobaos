@@ -167,7 +167,7 @@ class Baos extends EventEmitter {
           this._ft12_vars.lastResponse = service;
           this._switchFrameCount();
           // TODO: queue next
-          this._queue.data.shift();
+          this._queue.shift();
           this._queueNext();
           break;
         default:
