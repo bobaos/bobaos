@@ -136,7 +136,10 @@ class Baos extends EventEmitter {
     this.log('_ft12_processResetInd: got reset ind!');
     // send acknowledge
     this._ft12_sendAck();
+    // clear queue
+    this._queue = [];
     this.emit('reset');
+
   }
 
   _ft12_processDataFrame(data) {
