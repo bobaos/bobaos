@@ -81,7 +81,7 @@ class Baos extends EventEmitter {
             this._ft12_vars.resetIntervalCount = 0;
             clearInterval(this._ft12_vars.resetIntervalID);
             this.log("opening serialport");
-            this._serialPort.open();
+            setTimeout(_ => {this._serialPort.open()}, 1000);
           })
         }
       }, this._ft12_consts.resetIntervalTime);
@@ -166,6 +166,7 @@ class Baos extends EventEmitter {
           this.log('_ft12_processDataFrame: got service with direction: res');
           this.emit('service', service);
           // DONE: set response to true
+          this._ft12_vars.ackReceived = true;
           this._ft12_vars.responseReceived = true;
           this._ft12_vars.lastResponse = service;
           this._switchFrameCount();
