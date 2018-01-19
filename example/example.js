@@ -26,5 +26,5 @@ app.on('reset', function () {
 
 
 app.on('service', (data) => {
-  console.log(data.service, data.payload)
+  console.log(JSON.stringify(data));
 });

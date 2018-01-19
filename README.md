@@ -101,7 +101,7 @@ Response example:
   payload: 
     [ { id: 1, length: 2, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true }, dpt: 'dpt9' },
     { id: 2, length: 1, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true}, dpt: 'dpt5' },
-    { id: 3, length: 1, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true}, dpt: 'dpt5' },
+    { id: 3, length: 1, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true}, dpt: 'dpt5' } ] }
 ```
 
 **setDatapointValue(id, value)**
