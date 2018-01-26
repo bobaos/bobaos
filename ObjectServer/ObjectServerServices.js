@@ -2,6 +2,21 @@
 
 const Services = [];
 
+
+Services.push({
+  name: 'GetServerItem.Req',
+  main: 0xf0,
+  sub: 0x01,
+  direction: 'request'
+});
+
+Services.push({
+  name: 'GetServerItem.Res',
+  main: 0xf0,
+  sub: 0x81,
+  direction: 'response'
+});
+
 Services.push({
   name: 'ServerItem.Ind',
   main: 0xf0,
@@ -47,6 +62,7 @@ Services.push({
   sub: 0x03,
   direction: 'request'
 });
+
 Services.push({
   name: 'GetDatapointDescription.Res',
   main: 0xf0,

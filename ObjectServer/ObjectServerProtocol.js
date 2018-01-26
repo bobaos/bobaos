@@ -1,5 +1,8 @@
 'use strict';
 
+// TODO: error handling with one func
+// TODO: Get....Req in one func constructor like _GetRequest(serviceName, params) { return Buffer }
+
 /**
  * Class with static methods to compose/parse messages
  */
@@ -7,6 +10,7 @@ const Services = require('./ObjectServerServices');
 const Errors = require('./ObjectServerErrors');
 
 class ObjectServerProtocol {
+
   static GetDatapointValueReq(params) {
     if (params !== null && typeof params === 'object') {
       if (!Object.prototype.hasOwnProperty.call(params, 'start')) {
@@ -80,6 +84,36 @@ class ObjectServerProtocol {
         number = params.number;
       }
       const serviceName = 'GetDatapointDescription.Req';
+      // const findServiceByName = service => service.name === serviceName;
+      // let service = Services.find(findServiceByName);
+      let service = this._findServiceByName(serviceName);
+      if (service !== null && typeof service === 'object') {
+        let main = service.main;
+        let sub = service.sub;
+        let servicePart = Buffer.from([main, sub]);
+        let dpPart = Buffer.alloc(4);
+        dpPart.writeUInt16BE(start, 0);
+        dpPart.writeUInt16BE(number, 2);
+        return Buffer.concat([servicePart, dpPart]);
+      } else {
+        throw new RangeError(`Service ${serviceName} not found`);
+      }
+    } else {
+      throw new TypeError('Please specify parameters as object {start: Int, number: Int}');
+    }
+  }
+
+  static GetServerItemReq(params) {
+    if (params !== null && typeof params === 'object') {
+      if (!Object.prototype.hasOwnProperty.call(params, 'start')) {
+        throw new Error('Please specify item start number');
+      }
+      let start = params.start;
+      let number = 1;
+      if (Object.prototype.hasOwnProperty.call(params, 'number')) {
+        number = params.number;
+      }
+      const serviceName = 'GetServerItem.Req';
       // const findServiceByName = service => service.name === serviceName;
       // let service = Services.find(findServiceByName);
       let service = this._findServiceByName(serviceName);
@@ -504,6 +538,7 @@ class ObjectServerProtocol {
   }
 
   static _processServerItemData(data) {
+    // TODO: Item table (?)
     let payload = [];
     let i = 0;
     while (i < data.length - 3) {
@@ -539,9 +574,39 @@ class ObjectServerProtocol {
       service: serviceName,
       direction: service.direction,
       error: false,
-      start: 0,
-      number: 0,
+      start: start,
+      number: number,
       payload: payload
+    }
+  }
+
+  static _GetServerItemRes(data) {
+    const serviceName = 'GetServerItem.Res';
+    const service = this._findServiceByName(serviceName);
+    const start = data.readUInt16BE(0);
+    const number = data.readUInt16BE(2);
+    if (number !== 0) {
+      const payloadPart = data.slice(4);
+      const payload = this._processServerItemData(payloadPart);
+      return {
+        service: serviceName,
+        direction: service.direction,
+        error: false,
+        start: start,
+        number: number,
+        payload: payload
+      }
+    } else {
+      let errorCode = data.readUInt8(4);
+      let error = this._findErrorByCode(errorCode);
+      return {
+        service: serviceName,
+        direction: service.direction,
+        error: true,
+        start: start,
+        number: number,
+        payload: error
+      }
     }
   }
 
@@ -559,6 +624,12 @@ class ObjectServerProtocol {
         if (service !== null && typeof service === 'object') {
           try {
             switch (service.name) {
+              case 'GetDatapointDescription.Res':
+                return this._GetDatapointDescriptionRes(dataPart);
+              case 'GetServerItem.Res':
+                return this._GetServerItemRes(dataPart);
+              case 'ServerItem.Ind':
+                return this._ServerItemInd(dataPart);
               case 'GetDatapointValue.Res':
                 return this._GetDatapointValueRes(dataPart);
               case 'DatapointValue.Ind':
@@ -567,10 +638,6 @@ class ObjectServerProtocol {
                 return this._GetParameterByteRes(dataPart);
               case 'SetDatapointValue.Res':
                 return this._SetDatapointValueRes(dataPart);
-              case 'ServerItem.Ind':
-                return this._ServerItemInd(dataPart);
-              case 'GetDatapointDescription.Res':
-                return this._GetDatapointDescriptionRes(dataPart);
               default:
                 break;
             }

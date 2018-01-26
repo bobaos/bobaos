@@ -86,7 +86,40 @@ So, all requests should be send by provided methods as getDatapointDescription, 
 
 Currently, this module supports following methods:
 
-**getDatapointDescription(id, [number = 1])**.
+**getServerItem(id, [number = 1])**
+
+Get server information like hardware/firmware version, serial number, bus connected state, etc.
+
+Response example:
+
+```
+{ service: 'GetServerItem.Res',
+  direction: 'response',
+  error: false,
+  start: 1,
+  number: 17,
+  payload:
+   [ { id: 1, length: 6, value: <Buffer 00 00 c5 08 00 03> },
+     { id: 2, length: 1, value: <Buffer 10> },
+     { id: 3, length: 1, value: <Buffer 12> },
+     { id: 4, length: 2, value: <Buffer 00 c5> },
+     { id: 5, length: 2, value: <Buffer 00 c5> },
+     { id: 6, length: 2, value: <Buffer 08 05> },
+     { id: 7, length: 1, value: <Buffer 10> },
+     { id: 8, length: 6, value: <Buffer 00 c5 01 01 76 b7> },
+     { id: 9, length: 4, value: <Buffer 04 9a c1 ee> },
+     { id: 10, length: 1, value: <Buffer 01> },
+     { id: 11, length: 2, value: <Buffer 00 fa> },
+     { id: 12, length: 2, value: <Buffer 00 00> },
+     { id: 13, length: 1, value: <Buffer 01> },
+     { id: 14, length: 2, value: <Buffer 00 fa> },
+     { id: 15, length: 1, value: <Buffer 00> },
+     { id: 16, length: 1, value: <Buffer 20> },
+     { id: 17, length: 1, value: <Buffer 01> } ] }
+
+```
+
+**getDatapointDescription(id, [number = 1])**
 
 Get description for datapoints. Response includes value type(length), config flags, datapoint type.
 

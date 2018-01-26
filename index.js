@@ -43,6 +43,7 @@ class Baos extends EventEmitter {
     this._ft12_vars = {
       resetAckReceived: false,
       resetIntervalID: null,
+      responseTimeoutID: null,
       resetIntervalCount: 0,
       ackReceived: false,
       responseReceived: false,
@@ -53,7 +54,7 @@ class Baos extends EventEmitter {
     this._ft12_consts = {
       resetIntervalTime: 1000,
       resetIntervalMaxCount: 3,
-      ackTimeoutTime: 500,
+      responseTimeoutTime: 1000,
     };
     // queue
     this._queue = [];
@@ -81,7 +82,9 @@ class Baos extends EventEmitter {
             this._ft12_vars.resetIntervalCount = 0;
             clearInterval(this._ft12_vars.resetIntervalID);
             this.log("opening serialport");
-            setTimeout(_ => {this._serialPort.open()}, 1000);
+            setTimeout(_ => {
+              this._serialPort.open()
+            }, this._ft12_consts.resetIntervalTime);
           })
         }
       }, this._ft12_consts.resetIntervalTime);
@@ -108,7 +111,6 @@ class Baos extends EventEmitter {
 
   _ft12_processAckFrame(data) {
     // TODO: ackReceived to true
-    // TODO: if
     this.log('_ft12_processAckFrame', data);
     if (this._ft12_vars.resetAckReceived) {
       // process data frame ack
@@ -143,17 +145,13 @@ class Baos extends EventEmitter {
   }
 
   _ft12_processDataFrame(data) {
-    // DONE: get help from FT12Helper
-    // DONE: parse message, get service. if direction === 'response' then set resReceived flag to true, queue_next()
-    // DONE: emit event 'service'
+    // parse message, get service. if direction === 'response' then set resReceived flag to true, queue_next()
     this.log("_ft12_processDataFrame:", data);
     if (data.length <= FIXED_FRAME_LENGTH) {
       throw new RangeError(`_ft12_processDataFrame: expected length > ${FIXED_FRAME_LENGTH} but got ${data.length}`);
     }
-    // send acknowledge to Baos in any case
+    // send acknowledge to BAOS in any case
     this._ft12_sendAck();
-    // this.emit('_ft12.dataFrame', message);
-    // DONE: parse
     try {
       const message = FT12FrameHelper.processFrame(data);
       const service = ObjectServerProtocol.processIncomingMessage(message);
@@ -165,12 +163,14 @@ class Baos extends EventEmitter {
         case 'response':
           this.log('_ft12_processDataFrame: got service with direction: res');
           this.emit('service', service);
-          // DONE: set response to true
+          // in case if somehow we didn't receive acknowledge frame but got response we set it's flag to true
           this._ft12_vars.ackReceived = true;
           this._ft12_vars.responseReceived = true;
           this._ft12_vars.lastResponse = service;
-          this._switchFrameCount();
-          // TODO: queue next
+          this._ft12_switchFrameCount();
+          // clear timeout which we set in _ft12_sendDataFrame method
+          clearTimeout(this._ft12_vars.responseTimeoutID);
+          // delete item from queue and proceed to next
           this._queue.shift();
           this._queueNext();
           break;
@@ -192,14 +192,20 @@ class Baos extends EventEmitter {
   }
 
   _ft12_sendDataFrame(data) {
-    // TODO; get help from FT12Helper
     try {
       let frame = FT12FrameHelper.composeFrame(data, this._ft12_vars.frameCount);
-      this.log('_ft12_sendDataFrame', frame);
+      this.log('_ft12_sendDataFrame:', frame);
       this._ft12_vars.lastRequest = frame.slice();
       this._ft12_vars.ackReceived = false;
       this._ft12_vars.responseReceived = false;
       this._serialPort.write(frame);
+      // now, we send data and wait for response. Incoming data frame with response direction
+      // will clear this interval, otherwise, it will be sent with different frame count.
+      this._ft12_vars.responseTimeoutID = setTimeout(_ => {
+        this.log('_ft12_sendDataFrame: response timeout, send data again with different frame count');
+        this._ft12_switchFrameCount();
+        this._ft12_sendDataFrame(data);
+      }, this._ft12_consts.responseTimeoutTime);
     } catch (e) {
       this.log(e);
     }
@@ -223,7 +229,6 @@ class Baos extends EventEmitter {
   }
 
   _queueAdd(data) {
-    // TODO: ackReceived, resReceived checks
     if (this._queue.length === 0) {
       // if no messages in queue then we send it immediately
       this._queue.push(data);
@@ -234,7 +239,7 @@ class Baos extends EventEmitter {
   }
 
   // frame count
-  _switchFrameCount() {
+  _ft12_switchFrameCount() {
     this._ft12_vars.frameCount = this._ft12_vars.frameCount === 'odd' ? 'even' : 'odd';
   }
 
@@ -246,6 +251,22 @@ class Baos extends EventEmitter {
     }
     try {
       const data = ObjectServerProtocol.GetDatapointDescriptionReq({
+        start: id,
+        number: number
+      });
+      this._queueAdd(data);
+    } catch (e) {
+      console.log(e);
+    }
+    return this;
+  }
+
+  getServerItem(id, number = 1) {
+    if (typeof id === "undefined") {
+      throw new Error("Please specify item id");
+    }
+    try {
+      const data = ObjectServerProtocol.GetServerItemReq({
         start: id,
         number: number
       });
@@ -335,20 +356,9 @@ class Baos extends EventEmitter {
   }
 
   // log
-  log(...
-        args) {
-    if (
-
-      this
-        .debug
-    ) {
-      console
-        .log(
-          'Baos:'
-          ,
-          args
-        )
-      ;
+  log(...args) {
+    if (this.debug) {
+      console.log('bobaos:', args);
     }
   }
 }

@@ -37,7 +37,7 @@ class FT12Parser extends Transform {
 
   _transform(chunk, encoding, cb) {
     let data = Buffer.concat([this.buffer, Buffer.from(chunk)]);
-    // console.log("______transform", data);
+    console.log("______transform", data);
     //while (data.length > 0) {
       if (data.length >= ACK_FRAME_LENGTH) {
         if (data.slice(0, ACK_FRAME_LENGTH).compare(ACK_FRAME) === 0) {
