@@ -187,7 +187,6 @@ class ObjectServerProtocol {
         dpPart.writeUInt16BE(start, 0);
         dpPart.writeUInt16BE(number, 2);
         let payloadPart = Buffer.concat(payload.map(processPayloadItem));
-        console.log(Buffer.concat([servicePart, dpPart, payloadPart]));
         return Buffer.concat([servicePart, dpPart, payloadPart]);
       } else {
         throw new RangeError(`Service ${serviceName} not found`);

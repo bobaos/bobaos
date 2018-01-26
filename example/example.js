@@ -3,10 +3,11 @@ const Baos = require('../index');
 const app = new Baos({debug: false});
 
 app.on('open', function () {
-  let serverBuffSize = 1000;
+  let serverBuffSize = 32000;
   let buff = Buffer.alloc(2);
   buff.writeUInt16BE(serverBuffSize, 0);
   app
+    .setServerItem(14, buff)
     .getDatapointDescription(1, 100)
     // .getParameterByte(1, 10)
     // .readDatapointFromBus(1, 1) // error
@@ -16,7 +17,7 @@ app.on('open', function () {
     .getDatapointValue(1, 1000)
     .getServerItem(1, 17)
     // now write buffer size
-    .setServerItem(14, buff)
+
 });
 
 app.on('reset', function () {
