@@ -116,7 +116,26 @@ Response example:
      { id: 15, length: 1, value: <Buffer 00> },
      { id: 16, length: 1, value: <Buffer 20> },
      { id: 17, length: 1, value: <Buffer 01> } ] }
+```
 
+**setServerItem(id, value)**
+
+Set server item value. Value param should be instance of Buffer.
+
+Example:
+```js
+// set programming mode to true
+app.setServerItem(15, Buffer.alloc(1, 0x01));
+```
+
+Response:
+```
+{ service: 'SetServerItem.Res',
+  direction: 'response',
+  error: false,
+  start: 15,
+  number: 0,
+  payload: null }
 ```
 
 **getDatapointDescription(id, [number = 1])**
