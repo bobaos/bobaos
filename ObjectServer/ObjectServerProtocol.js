@@ -133,6 +133,70 @@ class ObjectServerProtocol {
     }
   }
 
+  static SetServerItemReq(params) {
+    if (params !== null && typeof params === 'object') {
+      if (!Object.prototype.hasOwnProperty.call(params, 'start')) {
+        throw new Error('Please specify item start number');
+      }
+      let start = params.start;
+      let number = 1;
+      if (Object.prototype.hasOwnProperty.call(params, 'number')) {
+        number = params.number;
+      }
+      // payload
+      if (!Object.prototype.hasOwnProperty.call(params, 'payload')) {
+        throw new Error('Please specify payload');
+      }
+      let payload = params.payload;
+      if (!Array.isArray(payload)) {
+        throw new TypeError('Please specify payload as array');
+      }
+      const processPayloadItem = (item) => {
+        // {id[2], length[1], data[n]}
+        let res = Buffer.alloc(0);
+        if (item !== null && typeof item === 'object') {
+          if (!Object.prototype.hasOwnProperty.call(item, 'id')) {
+            throw new Error('Please specify item id');
+          }
+          let id = item.id;
+          let idBuff = Buffer.alloc(2);
+          idBuff.writeUInt16BE(id);
+          if (!Object.prototype.hasOwnProperty.call(item, 'value')) {
+            throw new Error('Please specify item value');
+          }
+          let value = item.value;
+          if (!Buffer.isBuffer(value)) {
+            throw new Error(`Expected value to be Buffer but got ${typeof value}`)
+          }
+          let length = value.length;
+          let lengthBuff = Buffer.alloc(1, length & 0xff);
+          res = Buffer.concat([idBuff, lengthBuff, value]);
+          return res;
+        }
+      };
+
+      const serviceName = 'SetServerItem.Req';
+      // const findServiceByName = service => service.name === serviceName;
+      // let service = Services.find(findServiceByName);
+      let service = this._findServiceByName(serviceName);
+      if (service !== null && typeof service === 'object') {
+        let main = service.main;
+        let sub = service.sub;
+        let servicePart = Buffer.from([main, sub]);
+        let dpPart = Buffer.alloc(4);
+        dpPart.writeUInt16BE(start, 0);
+        dpPart.writeUInt16BE(number, 2);
+        let payloadPart = Buffer.concat(payload.map(processPayloadItem));
+        console.log(Buffer.concat([servicePart, dpPart, payloadPart]));
+        return Buffer.concat([servicePart, dpPart, payloadPart]);
+      } else {
+        throw new RangeError(`Service ${serviceName} not found`);
+      }
+    } else {
+      throw new TypeError('Please specify parameters as object {start: Int, number: Int}');
+    }
+  }
+
   static SetDatapointValueReq(params) {
     if (params !== null && typeof params === 'object') {
       // start
@@ -334,6 +398,36 @@ class ObjectServerProtocol {
       start: start,
       number: number,
       payload: payload
+    }
+  }
+  static _SetServerItemRes(data) {
+    const serviceName = 'SetServerItem.Res';
+    let service = this._findServiceByName(serviceName);
+    if (data.length !== 5) {
+      throw RangeError(`${serviceName}: data length expected to be 5 but is ${data.length}`);
+    }
+    let start = data.readUInt16BE(0);
+    let number = data.readUInt16BE(2);
+    let errorCode = data.readUInt8(4);
+    if (errorCode === 0) {
+      return {
+        service: serviceName,
+        direction: service.direction,
+        error: false,
+        start: start,
+        number: number,
+        payload: null
+      }
+    } else {
+      let error = this._findErrorByCode(errorCode);
+      return {
+        service: serviceName,
+        direction: service.direction,
+        error: true,
+        start: start,
+        number: number,
+        payload: error
+      }
     }
   }
 
@@ -628,6 +722,8 @@ class ObjectServerProtocol {
                 return this._GetDatapointDescriptionRes(dataPart);
               case 'GetServerItem.Res':
                 return this._GetServerItemRes(dataPart);
+              case 'SetServerItem.Res':
+                return this._SetServerItemRes(dataPart);
               case 'ServerItem.Ind':
                 return this._ServerItemInd(dataPart);
               case 'GetDatapointValue.Res':

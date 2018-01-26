@@ -276,6 +276,27 @@ class Baos extends EventEmitter {
     }
     return this;
   }
+  setServerItem(id, value) {
+    if (typeof id === "undefined") {
+      throw new Error("Please specify item id");
+    }
+    if (typeof value === "undefined") {
+      throw new Error("Please specify item value");
+    }
+    try {
+      const data = ObjectServerProtocol.SetServerItemReq({
+        start: id,
+        number: 1,
+        payload: [
+          {id: id, value: value}
+        ]
+      });
+      this._queueAdd(data);
+    } catch (e) {
+      console.log(e);
+    }
+    return this;
+  }
 
   setDatapointValue(id, value) {
     if (typeof id === "undefined") {

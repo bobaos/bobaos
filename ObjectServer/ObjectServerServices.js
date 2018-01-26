@@ -9,19 +9,30 @@ Services.push({
   sub: 0x01,
   direction: 'request'
 });
-
 Services.push({
   name: 'GetServerItem.Res',
   main: 0xf0,
   sub: 0x81,
   direction: 'response'
 });
-
 Services.push({
   name: 'ServerItem.Ind',
   main: 0xf0,
   sub: 0xc2,
   direction: 'indication'
+});
+
+Services.push({
+  name: 'SetServerItem.Req',
+  main: 0xf0,
+  sub: 0x02,
+  direction: 'request'
+});
+Services.push({
+  name: 'SetServerItem.Res',
+  main: 0xf0,
+  sub: 0x82,
+  direction: 'response'
 });
 
 Services.push({
@@ -62,7 +73,6 @@ Services.push({
   sub: 0x03,
   direction: 'request'
 });
-
 Services.push({
   name: 'GetDatapointDescription.Res',
   main: 0xf0,

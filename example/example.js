@@ -1,17 +1,22 @@
 const Baos = require('../index');
 
-const app = new Baos({debug: true});
+const app = new Baos({debug: false});
 
 app.on('open', function () {
+  let serverBuffSize = 1000;
+  let buff = Buffer.alloc(2);
+  buff.writeUInt16BE(serverBuffSize, 0);
   app
-    // .getDatapointDescription(1, 10)
+    .getDatapointDescription(1, 100)
     // .getParameterByte(1, 10)
     // .readDatapointFromBus(1, 1) // error
     // .readDatapointFromBus(1, 2)
     // .getDatapointValue(1, 10)
     // .setDatapointValue(2, Buffer.alloc(2, 0xc0))
-    .getDatapointValue(1)
+    .getDatapointValue(1, 1000)
     .getServerItem(1, 17)
+    // now write buffer size
+    .setServerItem(14, buff)
 });
 
 app.on('reset', function () {
