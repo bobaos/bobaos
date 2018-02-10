@@ -38,7 +38,9 @@ class Baos extends EventEmitter {
     this._serialPort = new SerialPort(serialPortDevice, serialPortParams);
     const parser = new FT12Parser();
     this._serialPort.pipe(parser);
-
+    // vars to resolve/reject last request promise
+    this._resolveLastReq = null;
+    this._rejectLastReq = null;
     // this._ft12
     this._ft12_vars = {
       resetAckReceived: false,
@@ -110,7 +112,6 @@ class Baos extends EventEmitter {
   }
 
   _ft12_processAckFrame(data) {
-    // TODO: ackReceived to true
     this.log('_ft12_processAckFrame', data);
     if (this._ft12_vars.resetAckReceived) {
       // process data frame ack
@@ -129,8 +130,7 @@ class Baos extends EventEmitter {
   }
 
   _ft12_processResetInd(data) {
-    // TODO: reset frame count
-    // TODO: emit event 'reset'
+    // reset frame count
     this._ft12_vars.frameCount = 'odd';
     this._ft12_vars.resetAckReceived = true;
     this._ft12_vars.ackReceived = true;
@@ -140,6 +140,7 @@ class Baos extends EventEmitter {
     this._ft12_sendAck();
     // clear queue
     this._queue = [];
+    // emit event 'reset'
     this.emit('reset');
 
   }
@@ -162,7 +163,28 @@ class Baos extends EventEmitter {
           break;
         case 'response':
           this.log('_ft12_processDataFrame: got service with direction: res');
+          // in any case emit 'service' event
           this.emit('service', service);
+          // callback
+          if (!service.error) {
+            // resolve last req promise
+            if (typeof this._resolveLastReq === 'function') {
+              if (Array.isArray(service.payload)) {
+                this._resolveLastReq(service.payload);
+              } else {
+                this._resolveLastReq(JSON.stringify(service.payload));
+              }
+            }
+          } else {
+            if (typeof this._rejectLastReq === 'function') {
+              // if we got error from baos then reject last req promise with error description
+              if (Array.isArray(service.payload)) {
+                this._rejectLastReq(service.payload[0].description);
+              } else {
+                this._rejectLastReq(JSON.stringify(service.payload));
+              }
+            }
+          }
           // in case if somehow we didn't receive acknowledge frame but got response we set it's flag to true
           this._ft12_vars.ackReceived = true;
           this._ft12_vars.responseReceived = true;
@@ -212,12 +234,14 @@ class Baos extends EventEmitter {
   }
 
   // queue
-  // TODO: queue methods, send, next, etc, onAckTimeout
   _queueNext() {
     this.log('_queue_next', this._queue.length);
     if (this._queue.length > 0) {
       if (this._ft12_vars.ackReceived && this._ft12_vars.responseReceived) {
-        let data = this._queue[0];
+        let item = this._queue[0];
+        let data = item.data;
+        this._resolveLastReq = item.resolve;
+        this._rejectLastReq = item.reject;
         this.log('_queue_next send data', data);
         this._ft12_sendDataFrame(data);
       } else {
@@ -244,119 +268,132 @@ class Baos extends EventEmitter {
   }
 
   // public datapoint methods
-  // TODO: datapoint methods
   getDatapointDescription(id, number = 1) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify datapoint id");
-    }
-    try {
-      const data = ObjectServerProtocol.GetDatapointDescriptionReq({
-        start: id,
-        number: number
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+      if (typeof id === "undefined") {
+        throw new Error("Please specify datapoint id");
+      }
+      try {
+        const data = ObjectServerProtocol.GetDatapointDescriptionReq({
+          start: id,
+          number: number
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   getServerItem(id, number = 1) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify item id");
-    }
-    try {
-      const data = ObjectServerProtocol.GetServerItemReq({
-        start: id,
-        number: number
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+      if (typeof id === "undefined") {
+        throw new Error("Please specify item id");
+      }
+      try {
+        const data = ObjectServerProtocol.GetServerItemReq({
+          start: id,
+          number: number
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
+
   setServerItem(id, value) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify item id");
-    }
-    if (typeof value === "undefined") {
-      throw new Error("Please specify item value");
-    }
-    try {
-      const data = ObjectServerProtocol.SetServerItemReq({
-        start: id,
-        number: 1,
-        payload: [
-          {id: id, value: value}
-        ]
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+      if (typeof id === "undefined") {
+        throw new Error("Please specify item id");
+      }
+      if (typeof value === "undefined") {
+        throw new Error("Please specify item value");
+      }
+      try {
+        const data = ObjectServerProtocol.SetServerItemReq({
+          start: id,
+          number: 1,
+          payload: [
+            {id: id, value: value}
+          ]
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   setDatapointValue(id, value) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify datapoint id");
-    }
-    if (!Buffer.isBuffer(value)) {
-      throw new TypeError("Please specify value as buffer");
-    }
-    try {
-      const data = ObjectServerProtocol.SetDatapointValueReq({
-        start: id,
-        number: 1,
-        payload: [
-          {id: id, value: value, command: 'set and send'}
-        ]
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+      if (typeof id === "undefined") {
+        throw new Error("Please specify datapoint id");
+      }
+      if (!Buffer.isBuffer(value)) {
+        throw new TypeError("Please specify value as buffer");
+      }
+      try {
+        const data = ObjectServerProtocol.SetDatapointValueReq({
+          start: id,
+          number: 1,
+          payload: [
+            {id: id, value: value, command: 'set and send'}
+          ]
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   readDatapointFromBus(id, length) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify datapoint id");
-    }
-    if (typeof length === "undefined") {
-      throw new Error("Please specify datapoint value length in bytes");
-    }
-    try {
-      let value = Buffer.alloc(length, 0x00);
-      const data = ObjectServerProtocol.SetDatapointValueReq({
-        start: id,
-        number: 1,
-        payload: [
-          {id: id, value: value, command: "read via bus", length: length}
-        ]
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+      if (typeof id === "undefined") {
+        throw new Error("Please specify datapoint id");
+      }
+      if (typeof length === "undefined") {
+        throw new Error("Please specify datapoint value length in bytes");
+      }
+      try {
+        let value = Buffer.alloc(length, 0x00);
+        const data = ObjectServerProtocol.SetDatapointValueReq({
+          start: id,
+          number: 1,
+          payload: [
+            {id: id, value: value, command: "read via bus", length: length}
+          ]
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   getDatapointValue(id, number = 1) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify datapoint id");
-    }
-    try {
-      const data = ObjectServerProtocol.GetDatapointValueReq({
-        start: id,
-        number: number
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+
+      if (typeof id === "undefined") {
+        throw new Error("Please specify datapoint id");
+      }
+      try {
+        const data = ObjectServerProtocol.GetDatapointValueReq({
+          start: id,
+          number: number
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
 
   }
 

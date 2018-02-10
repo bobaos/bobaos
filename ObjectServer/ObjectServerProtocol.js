@@ -1,7 +1,5 @@
 'use strict';
 
-// TODO: error handling with one func
-// TODO: Get....Req in one func constructor like _GetRequest(serviceName, params) { return Buffer }
 
 /**
  * Class with static methods to compose/parse messages
@@ -251,7 +249,6 @@ class ObjectServerProtocol {
             let valueBuff = Buffer.alloc(1, 0x00);
 
             // now let check if item value is required by command
-            // TODO: check all possible cases
             if (command.itemValueRequired) {
               if (Object.prototype.hasOwnProperty.call(item, 'value')) {
                 if (Buffer.isBuffer(item.value)) {
@@ -605,7 +602,6 @@ class ObjectServerProtocol {
     let start = data.readUInt16BE(0);
     let number = data.readUInt16BE(2);
     if (number !== 0) {
-      // TODO: process
       let payloadPart = data.slice(4);
       let payload = this._processDatapointDescriptionPayload(payloadPart);
       return {
@@ -656,7 +652,6 @@ class ObjectServerProtocol {
   }
 
   static _ServerItemInd(data) {
-    // TODO: implement ServerItem requests/responses/indications
     const serviceName = 'ServerItem.Ind';
     const service = this._findServiceByName(serviceName);
     const start = data.readUInt16BE(0);

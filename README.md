@@ -44,39 +44,42 @@ Define in js file:
   // send requests after successful initial reset
   app.on('open', () => {
     app
-      .getDatapointDescription(1, 10)
-      .getParameterByte(1, 10)
-      .readDatapointFromBus(1, 2) // good
-      .readDatapointFromBus(1, 10) // error!
-      .getDatapointValue(1, 10)
-      .setDatapointValue(2, Buffer.alloc(1, 0xc0))
-      .getDatapointValue(2);
+      .getServerItem(1, 17)
+      .then(data => {
+        console.log("get ser item", data)
+      });
+    app.getServerItem(17, 20)
+      .then(data => {
+        console.log("get ser item 2", data);
+      });
+    app.getDatapointDescription(1, 30)
+      .then(data => {
+        console.log('success', data);
+      })
+      .catch(data => {
+        console.log('err', data);
+      });
+    //err
+    app.getDatapointDescription(349, 10)
+      .then(data => {
+        console.log('success', data);
+      })
+      .catch(data => {
+        console.log('err', data);
+      });
   });
 
   // listen to incoming events and responses
   app.on('service', console.log);
-``` 
 
-The output should looks like this with disabled debug option
-```
-{ service: 'GetParameterByte.Res',
-  error: false,
-  start: 1,
-  number: 10,
-  payload: <Buffer 01 03 05 07 09 0b 0a 00 00 00> }
-{ service: 'SetDatapointValue.Res',
-  error: false,
-  start: 1,
-  number: 0,
-  payload: null }
-{ service: 'GetDatapointValue.Res',
-  error: false,
-  start: 1,
-  number: 1,
-  payload: [ { id: 1, state: 4, length: 2, value: <Buffer 0c fb> } ] }
-  ....
-  ....
-```
+app.on('reset', _ => {
+  console.log('got reset indication');
+});
+
+app.on('service', (data) => {
+  console.log('got service data from baos: ', data);
+});
+``` 
 
 For more details look at example/ folder.
 

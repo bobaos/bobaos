@@ -1,34 +1,40 @@
-const Baos = require('../index');
-
-const app = new Baos({debug: false});
-
-app.on('open', function () {
+const Baos = require('../');
+const app = new Baos({serialPort: {device: '/dev/ttyAMA0'}, debug: false});
+// send requests after successful initial reset
+app.on('open', () => {
   app
-    .getDatapointDescription(1, 10)
-    .getParameterByte(1, 10)
-    .readDatapointFromBus(1, 1) // error
-    .readDatapointFromBus(1, 2)
-    .getDatapointValue(1, 10)
-    // .setDatapointValue(2, Buffer.alloc(2, 0xc0))
-    .getDatapointValue(1, 10)
     .getServerItem(1, 17)
-    .setServerItem(15, Buffer.alloc(1, 0x01))
-    // now write buffer size
-
+    .then(data => {
+      console.log("get ser item", data)
+    });
+  app.getServerItem(17, 20)
+    .then(data => {
+      console.log("get ser item 2", data);
+    });
+  app.getDatapointDescription(1, 30)
+    .then(data => {
+      console.log('success', data);
+    })
+    .catch(data => {
+      console.log('err', data);
+    });
+  //err
+  app.getDatapointDescription(349, 10)
+    .then(data => {
+      console.log('success', data);
+    })
+    .catch(data => {
+      console.log('err', data);
+    });
 });
 
-app.on('reset', function () {
-  app
-    .getDatapointDescription(1, 10)
-    // .getParameterByte(1, 10)
-    // .readDatapointFromBus(1, 1) // error
-    // .readDatapointFromBus(1, 2)
-    // .getDatapointValue(1, 10)
-    // .setDatapointValue(2, Buffer.alloc(1, 0xc0))
-    // .getDatapointValue(2);
-});
+// listen to incoming events and responses
+app.on('service', console.log);
 
+app.on('reset', _ => {
+  console.log('got reset indication');
+});
 
 app.on('service', (data) => {
-  console.log(data);
+  console.log('got service data from baos: ', data);
 });
