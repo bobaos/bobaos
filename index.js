@@ -21,7 +21,7 @@ class Baos extends EventEmitter {
     let serialPortDevice = '/dev/ttyAMA0';
     let serialPortParams = {
       baudRate: 19200,
-      parity: "even",
+      parity: 'even',
       dataBits: 8,
       stopBits: 1
     };
@@ -64,7 +64,7 @@ class Baos extends EventEmitter {
     parser.on('data', this._ft12_processIncomingData.bind(this));
     // sending reset request at communication start
     this._serialPort.on('open', () => {
-      this.log("baos constructor: serial port opened, sending reset request [0]");
+      this.log('baos constructor: serial port opened, sending reset request [0]');
       this._ft12_sendResetRequest();
       this._ft12_vars.resetIntervalID = setInterval(() => {
         const resetAckReceived = this._ft12_vars.resetAckReceived;
@@ -76,14 +76,14 @@ class Baos extends EventEmitter {
           this._ft12_sendResetRequest();
         }
         if (!resetAckReceived && resetIntervalCount >= resetIntervalMaxCount) {
-          this.log("closing serial port");
+          this.log('closing serial port');
           this._serialPort.close((err) => {
             if (err) {
-              throw new Error("error while closing port: " + err);
+              throw new Error('error while closing port: ' + err);
             }
             this._ft12_vars.resetIntervalCount = 0;
             clearInterval(this._ft12_vars.resetIntervalID);
-            this.log("opening serialport");
+            this.log('opening serialport');
             setTimeout(_ => {
               this._serialPort.open()
             }, this._ft12_consts.resetIntervalTime);
@@ -99,7 +99,7 @@ class Baos extends EventEmitter {
     if (!Buffer.isBuffer(data)) {
       throw new Error(`_ft12_processIncomingData: data expected to be buffer but got ${typeof data}`);
     }
-    this.log("_ft12_processIncomingData", data);
+    this.log('_ft12_processIncomingData', data);
     if (data.length <= FIXED_FRAME_LENGTH) {
       if (data.compare(ACK_FRAME) === 0) {
         this._ft12_processAckFrame(data);
@@ -147,7 +147,7 @@ class Baos extends EventEmitter {
 
   _ft12_processDataFrame(data) {
     // parse message, get service. if direction === 'response' then set resReceived flag to true, queue_next()
-    this.log("_ft12_processDataFrame:", data);
+    this.log('_ft12_processDataFrame:', data);
     if (data.length <= FIXED_FRAME_LENGTH) {
       throw new RangeError(`_ft12_processDataFrame: expected length > ${FIXED_FRAME_LENGTH} but got ${data.length}`);
     }
@@ -159,29 +159,37 @@ class Baos extends EventEmitter {
       switch (service.direction) {
         case 'indication':
           this.log('_ft12_processDataFrame: got service with direction: ind');
-          this.emit('service', service);
+          switch (service.service) {
+            case 'DatapointValue.Ind':
+              this.emit('DatapointValue.Ind', service.payload);
+              break;
+            case 'ServerItem.Ind':
+              this.emit('ServerItem.Ind', service.payload);
+              break;
+            default:
+              break;
+          }
           break;
         case 'response':
           this.log('_ft12_processDataFrame: got service with direction: res');
           // in any case emit 'service' event
-          this.emit('service', service);
           // callback
           if (!service.error) {
             // resolve last req promise
             if (typeof this._resolveLastReq === 'function') {
-              if (Array.isArray(service.payload)) {
+              if (service.hasOwnProperty('payload')) {
                 this._resolveLastReq(service.payload);
               } else {
-                this._resolveLastReq(JSON.stringify(service.payload));
+                this._resolveLastReq();
               }
             }
           } else {
             if (typeof this._rejectLastReq === 'function') {
               // if we got error from baos then reject last req promise with error description
-              if (Array.isArray(service.payload)) {
-                this._rejectLastReq(service.payload[0].description);
+              if (service.hasOwnProperty('payload')) {
+                this._rejectLastReq(service.payload);
               } else {
-                this._rejectLastReq(JSON.stringify(service.payload));
+                this._rejectLastReq();
               }
             }
           }
@@ -199,7 +207,9 @@ class Baos extends EventEmitter {
         default:
           break;
       }
-    } catch (e) {
+    }
+    catch
+      (e) {
       this.log(e);
     }
   }
@@ -270,8 +280,8 @@ class Baos extends EventEmitter {
   // public datapoint methods
   getDatapointDescription(id, number = 1) {
     return new Promise((resolve, reject) => {
-      if (typeof id === "undefined") {
-        throw new Error("Please specify datapoint id");
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify datapoint id');
       }
       try {
         const data = ObjectServerProtocol.GetDatapointDescriptionReq({
@@ -288,8 +298,8 @@ class Baos extends EventEmitter {
 
   getServerItem(id, number = 1) {
     return new Promise((resolve, reject) => {
-      if (typeof id === "undefined") {
-        throw new Error("Please specify item id");
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify item id');
       }
       try {
         const data = ObjectServerProtocol.GetServerItemReq({
@@ -306,11 +316,11 @@ class Baos extends EventEmitter {
 
   setServerItem(id, value) {
     return new Promise((resolve, reject) => {
-      if (typeof id === "undefined") {
-        throw new Error("Please specify item id");
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify item id');
       }
-      if (typeof value === "undefined") {
-        throw new Error("Please specify item value");
+      if (typeof value === 'undefined') {
+        throw new Error('Please specify item value');
       }
       try {
         const data = ObjectServerProtocol.SetServerItemReq({
@@ -330,11 +340,11 @@ class Baos extends EventEmitter {
 
   setDatapointValue(id, value) {
     return new Promise((resolve, reject) => {
-      if (typeof id === "undefined") {
-        throw new Error("Please specify datapoint id");
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify datapoint id');
       }
       if (!Buffer.isBuffer(value)) {
-        throw new TypeError("Please specify value as buffer");
+        throw new TypeError('Please specify value as buffer');
       }
       try {
         const data = ObjectServerProtocol.SetDatapointValueReq({
@@ -354,11 +364,11 @@ class Baos extends EventEmitter {
 
   readDatapointFromBus(id, length) {
     return new Promise((resolve, reject) => {
-      if (typeof id === "undefined") {
-        throw new Error("Please specify datapoint id");
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify datapoint id');
       }
-      if (typeof length === "undefined") {
-        throw new Error("Please specify datapoint value length in bytes");
+      if (typeof length === 'undefined') {
+        throw new Error('Please specify datapoint value length in bytes');
       }
       try {
         let value = Buffer.alloc(length, 0x00);
@@ -366,7 +376,7 @@ class Baos extends EventEmitter {
           start: id,
           number: 1,
           payload: [
-            {id: id, value: value, command: "read via bus", length: length}
+            {id: id, value: value, command: 'read via bus', length: length}
           ]
         });
         const item = {data: data, resolve: resolve, reject: reject};
@@ -380,8 +390,8 @@ class Baos extends EventEmitter {
   getDatapointValue(id, number = 1) {
     return new Promise((resolve, reject) => {
 
-      if (typeof id === "undefined") {
-        throw new Error("Please specify datapoint id");
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify datapoint id');
       }
       try {
         const data = ObjectServerProtocol.GetDatapointValueReq({
@@ -398,19 +408,21 @@ class Baos extends EventEmitter {
   }
 
   getParameterByte(id, number = 1) {
-    if (typeof id === "undefined") {
-      throw new Error("Please specify datapoint id");
-    }
-    try {
-      const data = ObjectServerProtocol.GetParameterByteReq({
-        start: id,
-        number: number
-      });
-      this._queueAdd(data);
-    } catch (e) {
-      console.log(e);
-    }
-    return this;
+    return new Promise((resolve, reject) => {
+      if (typeof id === 'undefined') {
+        throw new Error('Please specify datapoint id');
+      }
+      try {
+        const data = ObjectServerProtocol.GetParameterByteReq({
+          start: id,
+          number: number
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   // log
@@ -421,4 +433,5 @@ class Baos extends EventEmitter {
   }
 }
 
-module.exports = Baos;
+module
+  .exports = Baos;

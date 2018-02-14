@@ -523,7 +523,7 @@ class ObjectServerProtocol {
       if (dptType !== null && typeof dptType === 'object') {
         return dptType.dpt;
       } else {
-        return "unknown";
+        return 'unknown';
       }
     };
     const findValueType = (code) => {
@@ -549,7 +549,7 @@ class ObjectServerProtocol {
       if (valueType !== null && typeof valueType === 'object') {
         return valueType.length;
       } else {
-        return "unknown";
+        return 'unknown';
       }
     };
     const processConfigFlags = (code) => {
