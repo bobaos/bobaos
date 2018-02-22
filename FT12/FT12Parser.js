@@ -37,40 +37,54 @@ class FT12Parser extends Transform {
 
   _transform(chunk, encoding, cb) {
     let data = Buffer.concat([this.buffer, Buffer.from(chunk)]);
-    // console.log("______transform", data);
-    if (data.length >= ACK_FRAME_LENGTH) {
-      if (data.slice(0, ACK_FRAME_LENGTH).compare(ACK_FRAME) === 0) {
-        this.push(ACK_FRAME);
-        data = data.slice(ACK_FRAME_LENGTH);
+    // set proceed to true when we want to close loop and wait for another chunk of data
+    let processed = false;
+    while(!processed) {
+      // console.log("______transform", data);
+      if (data.length >= ACK_FRAME_LENGTH) {
+        if (data.slice(0, ACK_FRAME_LENGTH).compare(ACK_FRAME) === 0) {
+          this.push(ACK_FRAME);
+          data = data.slice(ACK_FRAME_LENGTH);
+        }
       }
-    }
-    if (data.length >= FIXED_FRAME_LENGTH) {
-      if (data.slice(0, FIXED_FRAME_LENGTH).compare(FIXED_FRAME_RESET_IND) === 0) {
-        this.push(FIXED_FRAME_RESET_IND);
-        data = data.slice(FIXED_FRAME_LENGTH);
+      if (data.length >= FIXED_FRAME_LENGTH) {
+        if (data.slice(0, FIXED_FRAME_LENGTH).compare(FIXED_FRAME_RESET_IND) === 0) {
+          this.push(FIXED_FRAME_RESET_IND);
+          data = data.slice(FIXED_FRAME_LENGTH);
+        }
       }
-    }
 
-    if (data.length > FIXED_FRAME_LENGTH) {
-      if (data.slice(0, 1).compare(DATA_FRAME_START) === 0 && data.slice(3, 4).compare(DATA_FRAME_START) === 0) {
-        let DATA_L_BYTE = data.readUInt8(1);
-        // [START_BYTE LENGTH_BYTE LENGTH_BYTE START_BYTE] [CR] [DATA + C] END_BYTE
-        let expectedLength = 4 + 1 + DATA_L_BYTE + 1;
-        if (data.length >= expectedLength) {
-          let lastByte = data.slice(expectedLength - 1, expectedLength);
-          if (lastByte.compare(DATA_FRAME_END) === 0) {
-            let dataFrame = data.slice(0, expectedLength);
-            this.push(dataFrame);
-            data = data.slice(expectedLength);
-            this.buffer = data;
+      if (data.length > FIXED_FRAME_LENGTH) {
+        if (data.slice(0, 1).compare(DATA_FRAME_START) === 0 && data.slice(3, 4).compare(DATA_FRAME_START) === 0) {
+          let DATA_L_BYTE = data.readUInt8(1);
+          // [START_BYTE LENGTH_BYTE LENGTH_BYTE START_BYTE] [CR] [DATA + C] END_BYTE
+          let expectedLength = 4 + 1 + DATA_L_BYTE + 1;
+          if (data.length >= expectedLength) {
+            let lastByte = data.slice(expectedLength - 1, expectedLength);
+            if (lastByte.compare(DATA_FRAME_END) === 0) {
+              let dataFrame = data.slice(0, expectedLength);
+              this.push(dataFrame);
+              data = data.slice(expectedLength);
+              this.buffer = data;
+            } else {
+              // if we got wrong frame then proceed anyway but don't emit event
+              data = data.slice(expectedLength);
+              this.buffer = data;
+            }
+          } else {
+            // if we got partial data
+            processed = true;
           }
+        } else {
+          // console.log("_____else");
+          data = data.slice(1);
         }
       } else {
-        // console.log("_____else");
-        data = data.slice(1);
+        // if we proceed data frame and got just some chunks
+        processed = true;
       }
+      this.buffer = data;
     }
-    this.buffer = data;
     cb();
   }
 

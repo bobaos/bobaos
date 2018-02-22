@@ -38,7 +38,7 @@ app.on('open', () => {
     });
 
   // set programming mode to 0
-  app.setServerItem(150, Buffer.alloc(1, 0x00))
+  app.setServerItem(15, Buffer.alloc(1, 0x00))
     .then(data => {
       console.log('ser server item: success');
     })
