@@ -187,9 +187,9 @@ class Baos extends EventEmitter {
             if (typeof this._rejectLastReq === 'function') {
               // if we got error from baos then reject last req promise with error description
               if (service.hasOwnProperty('payload')) {
-                this._rejectLastReq(service.payload);
+                this._rejectLastReq(new Error(service.payload.description));
               } else {
-                this._rejectLastReq();
+                this._rejectLastReq(new Error("Unknown error"));
               }
             }
           }
