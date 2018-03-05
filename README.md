@@ -20,14 +20,7 @@ curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs git
 ```
 
-5. Test with [bobaos-cli](https://github.com/shabunin/bobaos-cli)
-
-
-```sh
-sudo npm install -g bobaos-cli
-bobaos-cli
-```
-6. You may start using bobaos with [bobaos-datapoint-sdk](https://github.com/shabunin/bobaos-datapoint-sdk)
+5. Now you may test your installation with [bdsd-sock](https://github.com/shabunin/bdsd.sock) and [bdsd-cli](https://github.com/shabunin/bdsd-cli).
 
 # Using with your application
 
