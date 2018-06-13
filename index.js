@@ -362,6 +362,40 @@ class Baos extends EventEmitter {
     });
   }
 
+  setMultipleValues(values) {
+    return new Promise((resolve, reject) => {
+      if (!Array.isArray(values)) {
+        throw new Error('Please specify values as an Array of objects {id: id, value: value}');
+      }
+      if (values.length < 1) {
+        throw new Error('Values array shoudn\'t be empty');
+      }
+      try {
+        let start = values[0].id;
+        let number = values.length;
+        let payload = values.map(t => {
+          if (typeof t.id === 'undefined') {
+            throw new Error('Please specify datapoint id');
+          }
+          if (!Buffer.isBuffer(t.value)) {
+            throw new TypeError('Item value should be Buffer.');
+          }
+          return {id: t.id, value: t.value, command: 'set and send'}
+        });
+        const data = ObjectServerProtocol.SetDatapointValueReq({
+          start: start,
+          number: number,
+          payload: payload
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
+
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
   readDatapointFromBus(id, length) {
     return new Promise((resolve, reject) => {
       if (typeof id === 'undefined') {
@@ -385,6 +419,41 @@ class Baos extends EventEmitter {
         reject(e);
       }
     });
+  }
+
+  readMultipleDatapoints(datapoints) {
+      return new Promise((resolve, reject) => {
+        if (!Array.isArray(datapoints)) {
+          throw new Error('Please specify datapoints as an Array of objects {id: id, length: length}');
+        }
+        if (datapoints.length < 1) {
+          throw new Error('Datapoints array shoudn\'t be empty');
+        }
+        try {
+          let start = datapoints[0].id;
+          let number = datapoints.length;
+          let payload = datapoints.map(t => {
+            if (typeof t.id === 'undefined') {
+              throw new Error('Please specify datapoint id');
+            }
+            if (typeof t.length === 'undefined') {
+              throw new Error('Please specify datapoint value length in bytes');
+            }
+            let value = Buffer.alloc(t.length, 0x00);
+            return {id: t.id, value: value, command: 'read via bus'}
+          });
+          const data = ObjectServerProtocol.SetDatapointValueReq({
+            start: start,
+            number: number,
+            payload: payload
+          });
+          const item = {data: data, resolve: resolve, reject: reject};
+          this._queueAdd(item);
+
+        } catch (e) {
+          reject(e);
+        }
+      });
   }
 
   getDatapointValue(id, number = 1) {
