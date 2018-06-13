@@ -62,6 +62,9 @@ class Baos extends EventEmitter {
     this._queue = [];
     // process data returned by parser
     parser.on('data', this._ft12_processIncomingData.bind(this));
+    this._serialPort.on('error', err => {
+      this.emit('error', err);
+    });
     // sending reset request at communication start
     this._serialPort.on('open', () => {
       this.log('baos constructor: serial port opened, sending reset request [0]');
