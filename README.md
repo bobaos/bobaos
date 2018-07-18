@@ -8,28 +8,31 @@ The main purpose of project is to bring modern JavaScript with it's infrastructu
 
 # Installation
 
-1. Prepare your Raspberry Pi: install raspbian, enable ssh. Or you could download my image [here](https://drive.google.com/file/d/14nKNbaQfCUN9Mu7cFc5JTicbgbWo06kt/view?usp=sharing). In this case you should go directly to step 5. Image is based on 2017-11-29-raspbian-stretch-lite with installed nodejs 8, vim, git, enabled ssh and correct config.txt, cmdline.txt.
- 
-2. Install [KNX BAOS Module 838 kBerry](https://www.weinzierl.de/index.php/en/all-knx/knx-module-en/knx-baos-module-838-en) shield.
+1.  Prepare your Raspberry Pi: install raspbian, enable ssh. Or you could download my image [here](https://drive.google.com/file/d/14nKNbaQfCUN9Mu7cFc5JTicbgbWo06kt/view?usp=sharing). In this case you should go directly to step 5. Image is based on 2017-11-29-raspbian-stretch-lite with installed nodejs 8, vim, git, enabled ssh and correct config.txt, cmdline.txt.
 
-3. [Set up serial port](https://github.com/weinzierl-engineering/baos/blob/master/docs/Raspbian.adoc#kberry)
-  
-4. Install nodejs, git
+2.  Install [KNX BAOS Module 838 kBerry](https://www.weinzierl.de/index.php/en/all-knx/knx-module-en/knx-baos-module-838-en) shield.
+
+3.  [Set up serial port](https://github.com/weinzierl-engineering/baos/blob/master/docs/Raspbian.adoc#kberry)
+
+4.  Install nodejs, git
+
 ```sh
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs git
 ```
 
-5. Now you may test your installation with [bdsd-sock](https://github.com/shabunin/bdsd.sock) and [bdsd-cli](https://github.com/shabunin/bdsd-cli).
+5.  Now you may test your installation with [bdsd-sock](https://github.com/shabunin/bdsd.sock) and [bdsd-cli](https://github.com/shabunin/bdsd-cli).
 
 # Using with your application
 
 Add this module to your nodejs application:
+
 ```sh
 npm install --save bobaos
 ```
 
 Define in js file:
+
 ```js
 const Baos = require('bobaos');
 const app = new Baos({serialPort: {device: '/dev/ttyAMA0'}, debug: false});
@@ -40,12 +43,13 @@ app.on('open', () => {
   app
     .getServerItem(1, 17)
     .then(data => {
-      console.log('got server item 1-17', data)
+      console.log('got server item 1-17', data);
     })
     .catch(e => {
       console.log('err', e);
     });
-  app.getServerItem(17, 20)
+  app
+    .getServerItem(17, 20)
     .then(data => {
       console.log('got server item 17-20', data);
     })
@@ -54,7 +58,8 @@ app.on('open', () => {
     });
 
   // now get datapoint description
-  app.getDatapointDescription(1, 30)
+  app
+    .getDatapointDescription(1, 30)
     .then(data => {
       console.log('got datapoint description 1-30', data);
     })
@@ -62,7 +67,8 @@ app.on('open', () => {
       console.log('err while getting datapoint description 1-30', data);
     });
   // in my case it returns error cause no datapoints was configured
-  app.getDatapointDescription(349, 10)
+  app
+    .getDatapointDescription(349, 10)
     .then(data => {
       console.log('got datapoint description 349-359', data);
     })
@@ -77,14 +83,14 @@ app.on('reset', _ => {
 });
 
 // listen to indication events
-app.on('DatapointValue.Ind', (data) => {
+app.on('DatapointValue.Ind', data => {
   console.log('got datapoint value indication: ', data);
 });
 
-app.on('ServerItem.Ind', (data) => {
+app.on('ServerItem.Ind', data => {
   console.log('got server item indication: ', data);
 });
-``` 
+```
 
 For more details look at example/ folder.
 
@@ -102,15 +108,17 @@ Currently, this module supports following methods:
 Get server information like hardware/firmware version, serial number, bus connected state, etc.
 
 Request example:
+
 ```js
 // set programming mode to true
-app.getServerItem(1, 17)
-.then(data => {
-  console.log('get server item 1-17: success', data);
-})
-.catch(err => {
-  console.log('get server item 1-17: error', err);
-});
+app
+  .getServerItem(1, 17)
+  .then(data => {
+    console.log('get server item 1-17: success', data);
+  })
+  .catch(err => {
+    console.log('get server item 1-17: error', err);
+  });
 ```
 
 Response example:
@@ -140,15 +148,17 @@ Response example:
 Set server item value. Value param should be instance of Buffer.
 
 Example:
+
 ```js
 // set programming mode to true
-app.setServerItem(15, Buffer.alloc(1, 0x01))
-.then(_ => {
-  console.log('set programming mode: success');
-})
-.catch(err => {
-  console.log('set programming mode: error', err);
-});
+app
+  .setServerItem(15, Buffer.alloc(1, 0x01))
+  .then(_ => {
+    console.log('set programming mode: success');
+  })
+  .catch(err => {
+    console.log('set programming mode: error', err);
+  });
 ```
 
 **getDatapointDescription(id, [number = 1])**
@@ -156,18 +166,21 @@ app.setServerItem(15, Buffer.alloc(1, 0x01))
 Get description for datapoints. Response includes value type(length), config flags, datapoint type.
 
 Request example:
+
 ```js
 // set programming mode to true
-app.getDatapointDescription(1, 3)
-.then(data => {
-  console.log('get datapoint description 1 - 3: success', data);
-})
-.catch(err => {
-  console.log('get datapoint description 1 - 3: error', err);
-});
+app
+  .getDatapointDescription(1, 3)
+  .then(data => {
+    console.log('get datapoint description 1 - 3: success', data);
+  })
+  .catch(err => {
+    console.log('get datapoint description 1 - 3: error', err);
+  });
 ```
+
 Response example:
-    
+
 ```
 [ { id: 1, length: 2, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true }, dpt: 'dpt9' },
 { id: 2, length: 1, flags: { priority: "low", communication: true, read: true, write: false, readOnInit: false, transmit: true, update: true}, dpt: 'dpt5' },
@@ -175,44 +188,47 @@ Response example:
 ```
 
 **setDatapointValue(id, value)**
-  
+
 Set and send datapoint value to bus. Value should be Buffer encoded.
 
 Example:
+
 ```js
 // set programming mode to true
-app.setDatapointValue(1, Buffer.alloc(1, 0x01))
-.then(_ => {
-  console.log('set datapoint 1 value: success');
-})
-.catch(err => {
-  console.log('set datapoint 1 value: error', err);
-});
+app
+  .setDatapointValue(1, Buffer.alloc(1, 0x01))
+  .then(_ => {
+    console.log('set datapoint 1 value: success');
+  })
+  .catch(err => {
+    console.log('set datapoint 1 value: error', err);
+  });
 ```
 
 **readDatapointFromBus(id, length)**
 
-Send read request to KNX bus. 
-    
+Send read request to KNX bus.
+  
 Example:
+
 ```js
 // set programming mode to true
-app.readDatapointFromBus(1, 1)
-.then(_ => {
-  console.log('read datapoint 1 from bus: success');
-})
-.catch(err => {
-  console.log('read datapoint 1 from bus: error', err);
-});
+app
+  .readDatapointFromBus(1, 1)
+  .then(_ => {
+    console.log('read datapoint 1 from bus: success');
+  })
+  .catch(err => {
+    console.log('read datapoint 1 from bus: error', err);
+  });
 ```
 
-    
 **getDatapointValue(id, [number = 1])**
-    
+  
 Get datapoints value from baos.
-    
+  
 Response example:
-    
+
 ```
 [ { id: 1, state: { transmissionStatus: "Idle/OK", readRequestFlag: false, updateFlag: false, validFlag: false }, length: 2, value: <Buffer 0c fb> },
  { id: 2, state: { transmissionStatus: "Idle/OK", readRequestFlag: false, updateFlag: false, validFlag: false }, length: 1, value: <Buffer c0> },
@@ -225,32 +241,42 @@ Response example:
 Get parameter bytes starting with id number.
 
 Request example:
+
 ```js
 // set programming mode to true
-app.getParameterByte(1, 10)
-.then(data => {
-  console.log('get parameter byte 1 - 10: success', data);
-})
-.catch(err => {
-  console.log('get parameter byte 1 - 10: error', err);
-});
-```    
-    
+app
+  .getParameterByte(1, 10)
+  .then(data => {
+    console.log('get parameter byte 1 - 10: success', data);
+  })
+  .catch(err => {
+    console.log('get parameter byte 1 - 10: error', err);
+  });
+```
+
 Response example:
-    
+
 ```
 <Buffer 01 03 05 07 09 0b 0a 00 00 00>
 ```
 
 # Useful cases
 
-1. DIY home controller. 
-    * write your own scripts in JS
-    * use rich npm infrastructure to integrate with different services
-    
-2. As a gateway to other systems. For example, you may use it with [homebridge](https://github.com/nfarina/homebridge) to add HomeKit support to your KNX bus.
+1.  DIY home controller.
+
+    - write your own scripts in JS
+    - use rich npm infrastructure to integrate with different services
+
+2.  As a gateway to other systems. For example, you may use it with [homebridge](https://github.com/nfarina/homebridge) to add HomeKit support to your KNX bus.
 
 # Demo
+
 [My presentation at TADHack 2017](https://www.youtube.com/watch?v=vBXVysVJymc)
 
 [Apple HomeKit integration](https://www.youtube.com/watch?v=6K-xG2r9YwI)
+
+## Support me
+
+You can send me a beer by PayPal
+
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/shabunin)
