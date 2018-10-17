@@ -6,7 +6,7 @@ I would like to introduce you bobaos-project, JavaScript library implementing [K
 
 The main purpose of project is to bring modern JavaScript with it's infrastructure into KNX and world of BAOS.
 
-# Installation
+## Installation
 
 1.  Prepare your Raspberry Pi: install raspbian, enable ssh. Or you could download my image [here](https://drive.google.com/file/d/14nKNbaQfCUN9Mu7cFc5JTicbgbWo06kt/view?usp=sharing). In this case you should go directly to step 5. Image is based on 2017-11-29-raspbian-stretch-lite with installed nodejs 8, vim, git, enabled ssh and correct config.txt, cmdline.txt.
 
@@ -28,7 +28,7 @@ sudo apt-get install -y nodejs git
 Add this module to your nodejs application:
 
 ```sh
-npm install --save bobaos
+npm install --save bobaos@latest
 ```
 
 Define in js file:
@@ -96,7 +96,29 @@ For more details look at example/ folder.
 
 The values in request/response are buffers and you should use some library to decode/encode values. I suggest [knx-dpts-baos](https://github.com/shabunin/knx-dpts-baos).
 
-# API
+## Service methods
+
+```js
+// in this example
+// close serialport then open it again.
+// please keep in mind that when bobaos
+// get acknowledge for initial reset req
+// app object emit event "open" and so, 
+// your app.on("open"...) listener will run again
+// infinite open/close you may see in example.js
+app.closeSerialPort(err => {
+  if (err) {
+    console.log(err.message);
+
+    return;
+  }
+
+  console.log("serialport closed");
+  app.openSerialPort();
+});
+```
+
+## API
 
 The communication between Host(RPi) and ObjectServer(Baos module) in this module version implemented in request-response model.
 Requests are sent by following methods and returns Promise instance, so you are able to use Promise API.

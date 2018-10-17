@@ -12,8 +12,8 @@ app.on('open', async _ => {
     console.log(await app.getServerItem(1, 17));
     console.log('>> get server item 17-20');
     console.log(await app.getServerItem(17, 20));
-    // console.log('>> get datapoint description 1-5');
-    // console.log(await app.getDatapointDescription(1, 5));
+    console.log('>> get datapoint description 1-5');
+    console.log(await app.getDatapointDescription(1, 5));
     // console.log('>> get datapoint description 349 (!error)');
     // console.log(await app.getDatapointDescription(349));
     console.log('>> set prog mode to 0');
