@@ -16,85 +16,31 @@ const RESET_IND = Buffer.from([0x10, 0xC0, 0xC0, 0x16]);
 class Baos extends EventEmitter {
   constructor(props) {
     super(props);
-    this.debug = Object.prototype.hasOwnProperty.call(props, 'debug') ? props.debug : true;
+    this.debug = Object.prototype.hasOwnProperty.call(props, 'debug') ? props.debug : false;
+    this._ft12_consts = {
+      resetIntervalTime: 1000,
+      resetIntervalMaxCount: 3,
+      responseTimeoutTime: 1000,
+    };
     // default settings for serial port
-    let serialPortDevice = '/dev/ttyAMA0';
-    let serialPortParams = {
+    this._serialPortDevice = '/dev/ttyAMA0';
+    this._serialPortParams = {
       baudRate: 19200,
       parity: 'even',
       dataBits: 8,
       stopBits: 1
     };
     // assign settings from parameters
-    if (props.serialPort !== null && typeof props.serialPort === 'object') {
-      if (props.serialPort.device !== null && typeof props.serialPort.device === 'string') {
-        serialPortDevice = props.serialPort.device;
+    if (typeof props.serialPort === 'object') {
+      if (typeof props.serialPort.device === 'string') {
+        this._serialPortDevice = props.serialPort.device;
       }
-      if (props.serialPort.params !== null && typeof props.serialPort.params === 'object') {
-        serialPortParams = props.serialPort.params;
+      if (typeof props.serialPort.params === 'object') {
+        Object.assign(this._serialPortParams, props.serialPort.params);
       }
     }
-    // open port
-    this._serialPort = new SerialPort(serialPortDevice, serialPortParams);
-    const parser = new FT12Parser();
-    this._serialPort.pipe(parser);
-    // vars to resolve/reject last request promise
-    this._resolveLastReq = null;
-    this._rejectLastReq = null;
-    // this._ft12
-    this._ft12_vars = {
-      resetAckReceived: false,
-      resetIntervalID: null,
-      responseTimeoutID: null,
-      resetIntervalCount: 0,
-      ackReceived: false,
-      responseReceived: false,
-      lastRequest: null,
-      lastResponse: null,
-      frameCount: 'odd'
-    };
-    this._ft12_consts = {
-      resetIntervalTime: 1000,
-      resetIntervalMaxCount: 3,
-      responseTimeoutTime: 1000,
-    };
+    this.openSerialPort();
     // queue
-    this._queue = [];
-    // process data returned by parser
-    parser.on('data', this._ft12_processIncomingData.bind(this));
-    this._serialPort.on('error', err => {
-      this.emit('error', err);
-    });
-    // sending reset request at communication start
-    this._serialPort.on('open', () => {
-      this.log('baos constructor: serial port opened, sending reset request [0]');
-      this._ft12_sendResetRequest();
-      this._ft12_vars.resetIntervalID = setInterval(() => {
-        const resetAckReceived = this._ft12_vars.resetAckReceived;
-        const resetIntervalCount = this._ft12_vars.resetIntervalCount;
-        const resetIntervalMaxCount = this._ft12_consts.resetIntervalMaxCount;
-        if (!resetAckReceived && resetIntervalCount < resetIntervalMaxCount) {
-          this._ft12_vars.resetIntervalCount += 1;
-          this.log(`baos constructor: sending reset request[${resetIntervalCount + 1}]`);
-          this._ft12_sendResetRequest();
-        }
-        if (!resetAckReceived && resetIntervalCount >= resetIntervalMaxCount) {
-          this.log('closing serial port');
-          this._serialPort.close((err) => {
-            if (err) {
-              throw new Error('error while closing port: ' + err);
-            }
-            this._ft12_vars.resetIntervalCount = 0;
-            clearInterval(this._ft12_vars.resetIntervalID);
-            this.log('opening serialport');
-            setTimeout(_ => {
-              this._serialPort.open()
-            }, this._ft12_consts.resetIntervalTime);
-          })
-        }
-      }, this._ft12_consts.resetIntervalTime);
-    })
-    ;
   }
 
   // FT12 process data
@@ -280,6 +226,79 @@ class Baos extends EventEmitter {
     this._ft12_vars.frameCount = this._ft12_vars.frameCount === 'odd' ? 'even' : 'odd';
   }
 
+  //
+  openSerialPort() {
+    // init vars
+    // vars to resolve/reject last request promise
+    this._resolveLastReq = null;
+    this._rejectLastReq = null;
+    // this._ft12
+    this._ft12_vars = {
+      resetAckReceived: false,
+      resetIntervalID: null,
+      responseTimeoutID: null,
+      resetIntervalCount: 0,
+      ackReceived: false,
+      responseReceived: false,
+      lastRequest: null,
+      lastResponse: null,
+      frameCount: 'odd'
+    };
+    // empty queue
+    this._queue = [];
+    // open port
+    this._serialPort = new SerialPort(this._serialPortDevice, this._serialPortParams);
+    this._parser = new FT12Parser();
+    this._serialPort.pipe(this._parser);
+
+    // process data returned by parser
+    this._parser.on('data', this._ft12_processIncomingData.bind(this));
+    this._serialPort.on('error', err => {
+      this.emit('error', err);
+    });
+    // sending reset request at communication start
+    this._serialPort.on('open', () => {
+      this.log('serial port opened, sending reset request [0]');
+      this._ft12_sendResetRequest();
+      this._ft12_vars.resetIntervalID = setInterval(() => {
+        const resetAckReceived = this._ft12_vars.resetAckReceived;
+        const resetIntervalCount = this._ft12_vars.resetIntervalCount;
+        const resetIntervalMaxCount = this._ft12_consts.resetIntervalMaxCount;
+        if (!resetAckReceived && resetIntervalCount < resetIntervalMaxCount) {
+          this._ft12_vars.resetIntervalCount += 1;
+          this.log(`sending reset request[${resetIntervalCount + 1}]`);
+          this._ft12_sendResetRequest();
+        }
+        if (!resetAckReceived && resetIntervalCount >= resetIntervalMaxCount) {
+          this.log('ack is not received for reset req. closing serial port');
+          this.closeSerialPort((err) => {
+            if (err) {
+              throw new Error('error while closing port: ' + err);
+            }
+            this._ft12_vars.resetIntervalCount = 0;
+            clearInterval(this._ft12_vars.resetIntervalID);
+            this.log('trying to open serialport again');
+            setTimeout(_ => {
+              this.openSerialPort();
+            }, this._ft12_consts.resetIntervalTime);
+          })
+        }
+      }, this._ft12_consts.resetIntervalTime);
+    });
+  }
+
+  closeSerialPort(cb) {
+    this._ft12_vars.resetIntervalCount = 0;
+    clearInterval(this._ft12_vars.resetIntervalID);
+    this._parser.removeAllListeners("data");
+    this._serialPort.removeAllListeners("open");
+    this._serialPort.close(typeof cb === "function" ? cb : err => {
+      if (err) {
+        throw new Error('error while closing port: ' + err);
+      }
+    });
+  }
+
   // public datapoint methods
   getDatapointDescription(id, number = 1) {
     return new Promise((resolve, reject) => {
@@ -425,38 +444,38 @@ class Baos extends EventEmitter {
   }
 
   readMultipleDatapoints(datapoints) {
-      return new Promise((resolve, reject) => {
-        if (!Array.isArray(datapoints)) {
-          throw new Error('Please specify datapoints as an Array of objects {id: id, length: length}');
-        }
-        if (datapoints.length < 1) {
-          throw new Error('Datapoints array shoudn\'t be empty');
-        }
-        try {
-          let start = datapoints[0].id;
-          let number = datapoints.length;
-          let payload = datapoints.map(t => {
-            if (typeof t.id === 'undefined') {
-              throw new Error('Please specify datapoint id');
-            }
-            if (typeof t.length === 'undefined') {
-              throw new Error('Please specify datapoint value length in bytes');
-            }
-            let value = Buffer.alloc(t.length, 0x00);
-            return {id: t.id, value: value, command: 'read via bus'}
-          });
-          const data = ObjectServerProtocol.SetDatapointValueReq({
-            start: start,
-            number: number,
-            payload: payload
-          });
-          const item = {data: data, resolve: resolve, reject: reject};
-          this._queueAdd(item);
+    return new Promise((resolve, reject) => {
+      if (!Array.isArray(datapoints)) {
+        throw new Error('Please specify datapoints as an Array of objects {id: id, length: length}');
+      }
+      if (datapoints.length < 1) {
+        throw new Error('Datapoints array shoudn\'t be empty');
+      }
+      try {
+        let start = datapoints[0].id;
+        let number = datapoints.length;
+        let payload = datapoints.map(t => {
+          if (typeof t.id === 'undefined') {
+            throw new Error('Please specify datapoint id');
+          }
+          if (typeof t.length === 'undefined') {
+            throw new Error('Please specify datapoint value length in bytes');
+          }
+          let value = Buffer.alloc(t.length, 0x00);
+          return {id: t.id, value: value, command: 'read via bus'}
+        });
+        const data = ObjectServerProtocol.SetDatapointValueReq({
+          start: start,
+          number: number,
+          payload: payload
+        });
+        const item = {data: data, resolve: resolve, reject: reject};
+        this._queueAdd(item);
 
-        } catch (e) {
-          reject(e);
-        }
-      });
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 
   getDatapointValue(id, number = 1) {

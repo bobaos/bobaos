@@ -2,58 +2,40 @@ const Baos = require('../');
 const app = new Baos({serialPort: {device: '/dev/ttyAMA0'}, debug: false});
 
 // send requests after successful initial reset
-app.on('open', () => {
-  // get server item
-  app
-    .getServerItem(1, 17)
-    .then(data => {
-      console.log('got server item 1-17', data)
-    })
-    .catch(err => {
-      console.log('error while getting server items 1-17', err);
-    });
-  app.getServerItem(17, 20)
-    .then(data => {
-      console.log('got server item 17-20', data);
-    })
-    .catch(err => {
-      console.log('error while getting server items 17-20', err);
+app.on('open', async _ => {
+  try {
+    console.log("example: serialport opened");
+    // get server item
+    console.log('>> set prog mode to 1');
+    await app.setServerItem(15, Buffer.alloc(1, 0x01));
+    console.log('>> get server item 1-17');
+    console.log(await app.getServerItem(1, 17));
+    console.log('>> get server item 17-20');
+    console.log(await app.getServerItem(17, 20));
+    // console.log('>> get datapoint description 1-5');
+    // console.log(await app.getDatapointDescription(1, 5));
+    // console.log('>> get datapoint description 349 (!error)');
+    // console.log(await app.getDatapointDescription(349));
+    console.log('>> set prog mode to 0');
+    await app.setServerItem(15, Buffer.alloc(1, 0x00));
+    console.log('>> get parameter byte 1-10');
+    console.log(await app.getParameterByte(1, 10));
+
+    // close serialport then open it again and again
+    app.closeSerialPort(err => {
+      if (err) {
+        console.log(err.message);
+
+        return;
+      }
+
+      console.log("serialport closed");
+      app.openSerialPort();
     });
 
-  // now get datapoint description
-  app.getDatapointDescription(1, 5)
-    .then(data => {
-      console.log('got datapoint descriptions 1-5', data);
-    })
-    .catch(err => {
-      console.log('err while getting datapoint descriptions 1-5', err);
-    });
-  // in my case it returns error cause no datapoints was configured
-  app.getDatapointDescription(349, 1)
-    .then(data => {
-      console.log('got datapoint description 349', data);
-    })
-    .catch(err => {
-      console.log('err while getting datapoint description 349', err);
-    });
-
-  // set programming mode to 0
-  app.setServerItem(15, Buffer.alloc(1, 0x00))
-    .then(data => {
-      console.log('ser server item: success');
-    })
-    .catch(err => {
-      console.log('err while setting server item: error', err);
-    });
-
-  // parameter bytes
-  app.getParameterByte(1, 10)
-    .then(data => {
-      console.log('get parameter byte 1 - 10: success', data)
-    })
-    .catch(err => {
-      console.log('get parameter byte 1 - 10: error', err);
-    })
+  } catch (e) {
+    console.log(`Error with requests: ${e.message}`);
+  }
 });
 
 // listen to incoming events and responses
