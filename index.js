@@ -38,7 +38,10 @@ class Baos extends EventEmitter {
       }
     }
     this.openSerialPort();
-    // queue
+    // due to 'serialport' bug use hacking
+    // https://github.com/node-serialport/node-serialport/issues/1751
+    // TODO: update as bug will be solved
+    setInterval(_ => {}, 0);
   }
 
   // FT12 process data
