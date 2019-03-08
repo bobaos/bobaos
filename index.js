@@ -292,6 +292,8 @@ class Baos extends EventEmitter {
     clearInterval(this._ft12_vars.resetIntervalID);
     this._parser.removeAllListeners("data");
     this._serialPort.removeAllListeners("open");
+    this._queue = [];
+    this._ft12_vars.resetAckReceived = false;
     this._serialPort.close(
       typeof cb === "function"
         ? cb
