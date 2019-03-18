@@ -294,6 +294,11 @@ class Baos extends EventEmitter {
     this._serialPort.removeAllListeners("open");
     this._queue = [];
     this._ft12_vars.resetAckReceived = false;
+
+    // clear timeout for data that is sent again and again
+    // so, to be sure no excess data will be send to uart
+    clearTimeout(this._ft12_vars.responseTimeoutID);
+
     this._serialPort.close(
       typeof cb === "function"
         ? cb
