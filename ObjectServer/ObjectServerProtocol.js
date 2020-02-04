@@ -103,6 +103,36 @@ class ObjectServerProtocol {
       throw new TypeError("Please specify parameters as object {start: Int, number: Int}");
     }
   }
+  
+  static GetDescriptionStringReq(params) {
+    if (params !== null && typeof params === "object") {
+      if (!Object.prototype.hasOwnProperty.call(params, "start")) {
+        throw new Error("Please specify datapoint start number");
+      }
+      let start = params.start;
+      let number = 1;
+      if (Object.prototype.hasOwnProperty.call(params, "number")) {
+        number = params.number;
+      }
+      const serviceName = "GetDescriptionString.Req";
+      // const findServiceByName = service => service.name === serviceName;
+      // let service = Services.find(findServiceByName);
+      let service = this._findServiceByName(serviceName);
+      if (service !== null && typeof service === "object") {
+        let main = service.main;
+        let sub = service.sub;
+        let servicePart = Buffer.from([main, sub]);
+        let dpPart = Buffer.alloc(4);
+        dpPart.writeUInt16BE(start, 0);
+        dpPart.writeUInt16BE(number, 2);
+        return Buffer.concat([servicePart, dpPart]);
+      } else {
+        throw new RangeError(`Service ${serviceName} not found`);
+      }
+    } else {
+      throw new TypeError("Please specify parameters as object {start: Int, number: Int}");
+    }
+  }
 
   static GetServerItemReq(params) {
     if (params !== null && typeof params === "object") {
@@ -379,6 +409,39 @@ class ObjectServerProtocol {
       };
     }
   }
+  
+  static _GetDescriptionStringRes(data) {
+    const serviceName = "GetDescriptionString.Res";
+    let service = this._findServiceByName(serviceName);
+    if (data.length < 5) {
+      throw new RangeError(`${serviceName}: data length expeted to be > 5 but got ${data.length}`);
+    }
+    let start = data.readUInt16BE(0);
+    let number = data.readUInt16BE(2);
+    if (number !== 0) {
+      let payloadPart = data.slice(4);
+      let payload = this._processDescriptionStringPayload(payloadPart);
+      return {
+        service: serviceName,
+        direction: service.direction,
+        error: false,
+        start: start,
+        number: number,
+        payload: payload
+      };
+    } else {
+      let errorCode = data.readUInt8(4);
+      let error = this._findErrorByCode(errorCode);
+      return {
+        service: serviceName,
+        direction: service.direction,
+        error: true,
+        start: start,
+        number: number,
+        payload: error
+      };
+    }
+  }
 
   static _DatapointValueInd(data) {
     const serviceName = "DatapointValue.Ind";
@@ -493,7 +556,7 @@ class ObjectServerProtocol {
       };
     }
   }
-
+  
   static _processDatapointDescriptionPayload(data) {
     let payload = [];
     let i = 0;
@@ -594,7 +657,31 @@ class ObjectServerProtocol {
     }
     return payload;
   }
+  
+  static _processDescriptionStringPayload(data) {
+   let payload = [];
+    let i = 0;
+    while (i < data.length - 2) {
+      let id = data.readUInt16BE(i);
+      i += 2;
+      let length = data.readUInt8(i);
+      i += 1;
 
+      let value = null;
+      // check for length
+      if (data.length >= i + length) {
+        value = data.slice(i, i + length);
+        i += length;
+      }
+      payload.push({
+        id: id,
+        length: length,
+        value: value
+      });
+    }
+    return payload;
+  }
+  
   static _GetDatapointDescriptionRes(data) {
     const serviceName = "GetDatapointDescription.Res";
     let service = this._findServiceByName(serviceName);
@@ -716,6 +803,8 @@ class ObjectServerProtocol {
             switch (service.name) {
               case "GetDatapointDescription.Res":
                 return this._GetDatapointDescriptionRes(dataPart);
+              case "GetDescriptionString.Res":
+                return this._GetDescriptionStringRes(dataPart);
               case "GetServerItem.Res":
                 return this._GetServerItemRes(dataPart);
               case "SetServerItem.Res":

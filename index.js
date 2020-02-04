@@ -328,6 +328,24 @@ class Baos extends EventEmitter {
       }
     });
   }
+  
+  getDescriptionString(id, number = 1) {
+    return new Promise((resolve, reject) => {
+      if (typeof id === "undefined") {
+        throw new Error("Please specify datapoint id");
+      }
+      try {
+        const data = ObjectServerProtocol.GetDescriptionStringReq({
+          start: id,
+          number: number
+        });
+        const item = { data: data, resolve: resolve, reject: reject };
+        this._queueAdd(item);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
 
   getServerItem(id, number = 1) {
     return new Promise((resolve, reject) => {

@@ -93,4 +93,19 @@ Services.push({
   direction: 'response'
 });
 
+Services.push({
+  name: 'GetDescriptionString.Req',
+  main: 0xf0,
+  sub: 0x04,
+  direction: 'request'
+});
+
+
+Services.push({
+  name: 'GetDescriptionString.Res',
+  main: 0xf0,
+  sub: 0x84,
+  direction: 'response'
+});
+
 module.exports = Services;
