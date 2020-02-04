@@ -387,7 +387,7 @@ class Baos extends EventEmitter {
     });
   }
 
-  setDatapointValue(id, value) {
+  setDatapointValue(id, value, command = "set and send") {
     return new Promise((resolve, reject) => {
       if (typeof id === "undefined") {
         throw new Error("Please specify datapoint id");
@@ -399,7 +399,7 @@ class Baos extends EventEmitter {
         const data = ObjectServerProtocol.SetDatapointValueReq({
           start: id,
           number: 1,
-          payload: [{ id: id, value: value, command: "set and send" }]
+          payload: [{ id: id, value: value, command: command }]
         });
         const item = { data: data, resolve: resolve, reject: reject };
         this._queueAdd(item);
@@ -409,7 +409,7 @@ class Baos extends EventEmitter {
     });
   }
 
-  setMultipleValues(values) {
+  setMultipleValues(values, command = "set and send") {
     return new Promise((resolve, reject) => {
       if (!Array.isArray(values)) {
         throw new Error("Please specify values as an Array of objects {id: id, value: value}");
@@ -427,7 +427,7 @@ class Baos extends EventEmitter {
           if (!Buffer.isBuffer(t.value)) {
             throw new TypeError("Item value should be Buffer.");
           }
-          return { id: t.id, value: t.value, command: "set and send" };
+          return { id: t.id, value: t.value, command: command };
         });
         const data = ObjectServerProtocol.SetDatapointValueReq({
           start: start,
