@@ -17,6 +17,6 @@
   "author": "Vladimir Shabunin",
   "license": "ISC",
   "dependencies": {
-    "serialport": "^7.1.1"
+    "serialport": "^9.2.8"
   }
 }
